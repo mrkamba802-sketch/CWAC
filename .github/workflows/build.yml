@@ -118,26 +118,12 @@ jobs:
           engine = root / "common/src/main/java/ac/grim/grimac/predictionengine/predictions/PredictionEngine.java"
           replace_once(engine, "package ac.grim.grimac.predictionengine.predictions;\n",
               "package ac.grim.grimac.predictionengine.predictions;\n\nimport ac.grim.grimac.checks.impl.movement.NoSlowA;\nimport ac.grim.grimac.checks.impl.movement.NoWebA;\nimport ac.grim.grimac.checks.impl.movement.NoWebB;\n")
-          old_hook = """            if (player.packetStateData.isSlowedByUsingItem() && !clientVelAfterInput.isFlipItem()) {
-                player.checkManager.getNoSlow().handlePredictionAnalysis(Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy)));
-            }"""
-          new_hook = """            if (player.packetStateData.isSlowedByUsingItem() && !clientVelAfterInput.isFlipItem()) {
-                double itemUseOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy));
-                player.checkManager.getNoSlow().handlePredictionAnalysis(itemUseOffset);
-                player.checkManager.get(NoSlowA.class).handlePredictionAnalysis(itemUseOffset);
-            }
-
-            int webMask = StuckSpeed.COBWEB.getIndex() | StuckSpeed.COBWEB_WEAVING.getIndex();
-            if ((clientVelAfterInput.stuckSpeedMultiplier.getIndex() & webMask) != 0) {
-                double webOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy));
-                player.checkManager.get(NoWebA.class).handlePredictionAnalysis(webOffset);
-
-                double horizontalError = Math.pow(outputVel.getX() - player.actualMovement.getX(), 2)
-                        + Math.pow(outputVel.getZ() - player.actualMovement.getZ(), 2);
-                double horizontalOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(horizontalError));
-                player.checkManager.get(NoWebB.class).handlePredictionAnalysis(horizontalOffset);
-            }"""
-          replace_once(engine, old_hook, new_hook)
+          replace_once(engine,
+              "player.checkManager.getNoSlow().handlePredictionAnalysis(Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy)));",
+              "double itemUseOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy));\n                player.checkManager.getNoSlow().handlePredictionAnalysis(itemUseOffset);\n                player.checkManager.get(NoSlowA.class).handlePredictionAnalysis(itemUseOffset);")
+          replace_once(engine,
+              "            if (player.checkManager.getKnockbackHandler().shouldIgnoreForPrediction(clientVelAfterInput) ||",
+              "            int webMask = StuckSpeed.COBWEB.getIndex() | StuckSpeed.COBWEB_WEAVING.getIndex();\n            if ((clientVelAfterInput.stuckSpeedMultiplier.getIndex() & webMask) != 0) {\n                double webOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy));\n                player.checkManager.get(NoWebA.class).handlePredictionAnalysis(webOffset);\n\n                double horizontalError = Math.pow(outputVel.getX() - player.actualMovement.getX(), 2)\n                        + Math.pow(outputVel.getZ() - player.actualMovement.getZ(), 2);\n                double horizontalOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(horizontalError));\n                player.checkManager.get(NoWebB.class).handlePredictionAnalysis(horizontalOffset);\n            }\n\n            if (player.checkManager.getKnockbackHandler().shouldIgnoreForPrediction(clientVelAfterInput) ||")
           print("Patched check registration and prediction hooks.")
           PY
 
