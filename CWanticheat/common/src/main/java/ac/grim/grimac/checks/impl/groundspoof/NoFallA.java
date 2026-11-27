@@ -36,6 +36,7 @@ public class NoFallA extends Check implements PostPredictionListener {
         if (suspicious) {
             suspiciousTicks++;
             if (suspiciousTicks >= 2) {
+                player.checkManager.getNoFall().flipPlayerGroundStatus = true;
                 flagWithSetback(V.write(verbose()).f64(player.fallDistance)
                         .f64(player.actualMovement.getY()).bool(player.clientClaimsLastOnGround));
                 suspiciousTicks = 0;
