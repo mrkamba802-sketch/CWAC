@@ -268,8 +268,11 @@ jobs:
           tick_manager = root / "common/src/main/java/ac/grim/grimac/manager/TickManager.java"
           replace_once(tick_manager, "import ac.grim.grimac.manager.tick.impl.ResetTick;",
               "import ac.grim.grimac.manager.tick.impl.AirStuckWatchdog;\nimport ac.grim.grimac.manager.tick.impl.ResetTick;")
+          # FlagEvent is an async Bukkit event: run the AirStuck watchdog from asyncTick, not syncTick.
           replace_once(tick_manager, ".put(ResetTick.class, new ResetTick())",
-              ".put(ResetTick.class, new ResetTick())\n                .put(AirStuckWatchdog.class, new AirStuckWatchdog())")
+              ".put(ResetTick.class, new ResetTick())")
+          replace_once(tick_manager, ".put(TickInventory.class, new TickInventory())",
+              ".put(TickInventory.class, new TickInventory())\n                .put(AirStuckWatchdog.class, new AirStuckWatchdog())")
 
           setback = root / "common/src/main/java/ac/grim/grimac/manager/SetbackTeleportUtil.java"
           replace_once(setback,
