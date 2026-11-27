@@ -76,6 +76,79 @@ jobs:
             exit 1
           fi
 
+          SOURCE_OVERLAY="$GITHUB_WORKSPACE/CWanticheat/common/src/main/java"
+          if [[ -d "$SOURCE_OVERLAY" ]]; then
+            mkdir -p "$PROJECT_DIR/common/src/main/java"
+            cp -a "$SOURCE_OVERLAY/." "$PROJECT_DIR/common/src/main/java/"
+            echo "Applied new check source files from the repository."
+          else
+            echo "::error::Check source overlay directory was not found."
+            exit 1
+          fi
+
+          python3 - "$PROJECT_DIR" <<'PY'
+          from pathlib import Path
+          import sys
+
+          root = Path(sys.argv[1])
+
+          def replace_once(path: Path, old: str, new: str):
+              text = path.read_text(encoding="utf-8")
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"Expected one patch anchor in {path}, found {count}: {old[:90]!r}")
+              path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          manager = root / "common/src/main/java/ac/grim/grimac/manager/CheckManager.java"
+          replace_once(manager,
+              "import ac.grim.grimac.checks.impl.aim.AimDuplicateLook;",
+              "import ac.grim.grimac.checks.impl.aim.AimA;\nimport ac.grim.grimac.checks.impl.aim.AimB;\nimport ac.grim.grimac.checks.impl.aim.AimDuplicateLook;")
+          replace_once(manager,
+              "import ac.grim.grimac.checks.impl.groundspoof.NoFall;",
+              "import ac.grim.grimac.checks.impl.groundspoof.NoFall;\nimport ac.grim.grimac.checks.impl.groundspoof.NoFallA;")
+          replace_once(manager,
+              "import ac.grim.grimac.checks.impl.movement.NoSlow;",
+              "import ac.grim.grimac.checks.impl.movement.AirStuck;\nimport ac.grim.grimac.checks.impl.movement.NoSlow;\nimport ac.grim.grimac.checks.impl.movement.NoSlowA;\nimport ac.grim.grimac.checks.impl.movement.NoWebA;\nimport ac.grim.grimac.checks.impl.movement.NoWebB;")
+          replace_once(manager,
+              ".put(Reach.class, new Reach(player))",
+              ".put(Reach.class, new Reach(player))\n                .put(KillAuraA.class, new KillAuraA(player))\n                .put(KillAuraB.class, new KillAuraB(player))")
+          replace_once(manager,
+              ".put(NoFall.class, new NoFall(player))",
+              ".put(NoFall.class, new NoFall(player))\n                .put(NoFallA.class, new NoFallA(player))")
+          replace_once(manager,
+              ".put(AimProcessor.class, new AimProcessor(player))",
+              ".put(AimProcessor.class, new AimProcessor(player))\n                .put(AimA.class, new AimA(player))\n                .put(AimB.class, new AimB(player))")
+          replace_once(manager,
+              ".put(NoSlow.class, new NoSlow(player))",
+              ".put(NoSlow.class, new NoSlow(player))\n                .put(NoSlowA.class, new NoSlowA(player))\n                .put(NoWebA.class, new NoWebA(player))\n                .put(NoWebB.class, new NoWebB(player))\n                .put(AirStuck.class, new AirStuck(player))")
+
+          engine = root / "common/src/main/java/ac/grim/grimac/predictionengine/predictions/PredictionEngine.java"
+          replace_once(engine,
+              "package ac.grim.grimac.predictionengine.predictions;\n",
+              "package ac.grim.grimac.predictionengine.predictions;\n\nimport ac.grim.grimac.checks.impl.movement.NoSlowA;\nimport ac.grim.grimac.checks.impl.movement.NoWebA;\nimport ac.grim.grimac.checks.impl.movement.NoWebB;\n")
+          old_hook = """            if (player.packetStateData.isSlowedByUsingItem() && !clientVelAfterInput.isFlipItem()) {
+                player.checkManager.getNoSlow().handlePredictionAnalysis(Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy)));
+            }"""
+          new_hook = """            if (player.packetStateData.isSlowedByUsingItem() && !clientVelAfterInput.isFlipItem()) {
+                double itemUseOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy));
+                player.checkManager.getNoSlow().handlePredictionAnalysis(itemUseOffset);
+                player.checkManager.get(NoSlowA.class).handlePredictionAnalysis(itemUseOffset);
+            }
+
+            int webMask = StuckSpeed.COBWEB.getIndex() | StuckSpeed.COBWEB_WEAVING.getIndex();
+            if ((clientVelAfterInput.stuckSpeedMultiplier.getIndex() & webMask) != 0) {
+                double webOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy));
+                player.checkManager.get(NoWebA.class).handlePredictionAnalysis(webOffset);
+
+                double horizontalError = Math.pow(outputVel.getX() - player.actualMovement.getX(), 2)
+                        + Math.pow(outputVel.getZ() - player.actualMovement.getZ(), 2);
+                double horizontalOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(horizontalError));
+                player.checkManager.get(NoWebB.class).handlePredictionAnalysis(horizontalOffset);
+            }"""
+          replace_once(engine, old_hook, new_hook)
+          print("Patched check registration and prediction hooks.")
+          PY
+
       - name: Build only the Bukkit/Paper plugin
         shell: bash
         run: |
