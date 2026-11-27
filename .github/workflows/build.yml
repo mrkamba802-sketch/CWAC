@@ -96,6 +96,7 @@ jobs:
           mkdir -p "$PROJECT_DIR/common/src/main/java"
           cp -a "$SOURCE_OVERLAY/." "$PROJECT_DIR/common/src/main/java/"
           echo "Applied new check source files from the repository."
+          grep -q 'stableKey = "grim.inventory.auto_swap_c"' "$PROJECT_DIR/common/src/main/java/ac/grim/grimac/checks/impl/inventory/AutoSwapC.java"
 
           python3 - "$PROJECT_DIR" <<'PY'
           from pathlib import Path
