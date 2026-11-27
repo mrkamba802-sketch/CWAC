@@ -267,12 +267,28 @@ jobs:
                   raise SystemExit(f"NoSlow threshold not found in {config_path}")
               config_text = config_text[:match.start(1)] + no_slow_section + config_text[match.end(1):]
 
-              # Replace old KillAuraA/B config shapes with settings for the imported algorithms.
-              for key in ("KillAuraA", "KillAuraB"):
-                  pattern = rf"(?ms)^{re.escape(key)}:\n.*?(?=^[A-Za-z][A-Za-z0-9_-]*:\n|\Z)"
-                  config_text, replaced = re.subn(pattern, new_check_defaults[key] + "\n\n", config_text, count=1)
-                  if replaced != 1:
-                      raise SystemExit(f"Expected one legacy {key} config section in {config_path}, found {replaced}")
+              # Replace existing sections by top-level YAML section boundaries; append them when absent.
+              config_lines = config_text.splitlines()
+              for key in ("KillAuraA", "KillAuraB", "KillAuraC"):
+                  starts = [i for i, line in enumerate(config_lines) if line == key + ":"]
+                  if len(starts) > 1:
+                      raise SystemExit(f"Found duplicate {key} config sections in {config_path}")
+                  block_lines = new_check_defaults[key].splitlines()
+                  if starts:
+                      start = starts[0]
+                      end = start + 1
+                      while end < len(config_lines):
+                          line = config_lines[end]
+                          if line and not line[0].isspace() and line.endswith(":"):
+                              break
+                          end += 1
+                      config_lines[start:end] = block_lines + [""]
+                  else:
+                      if config_lines and config_lines[-1].strip():
+                          config_lines.append("")
+                      config_lines.extend(block_lines)
+                      config_lines.append("")
+              config_text = "\n".join(config_lines).rstrip() + "\n"
 
               for key, block in new_check_defaults.items():
                   if re.search(rf"(?m)^{re.escape(key)}:", config_text):
