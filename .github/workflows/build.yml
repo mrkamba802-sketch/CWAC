@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build:
-    name: Build JAR and source archive
+    name: Build Bukkit/Paper plugin and source archive
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -76,47 +76,53 @@ jobs:
             exit 1
           fi
 
-      - name: Build project
+      - name: Build only the Bukkit/Paper plugin
         shell: bash
         run: |
           set -euo pipefail
           cd "$PROJECT_DIR"
-          if [[ -f ./gradlew ]]; then
-            chmod +x ./gradlew
-            ./gradlew --no-daemon clean build
-          else
-            echo "::error::Gradle wrapper is missing from the source archive."
-            exit 1
-          fi
+          chmod +x ./gradlew
+          ./gradlew --no-daemon clean :bukkit:shadowJar -Prelease=true -PshadePE=true -Prelocate=true
 
-      - name: Collect JARs and package source
+      - name: Verify and package the ready-to-install plugin and source
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$GITHUB_WORKSPACE/dist/jar"
 
-          found=0
-          while IFS= read -r -d '' jar; do
-            name="${jar#"$PROJECT_DIR"/}"
-            name="${name//\//__}"
-            cp "$jar" "$GITHUB_WORKSPACE/dist/jar/$name"
-            found=1
-          done < <(find "$PROJECT_DIR" -type f -path '*/build/libs/*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' -print0)
+          PLUGIN_DIR="$PROJECT_DIR/bukkit/build/libs"
+          mapfile -t PLUGIN_JARS < <(find "$PLUGIN_DIR" -maxdepth 1 -type f -name 'cwanticheat-bukkit-*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' | sort)
 
-          if [[ "$found" -ne 1 ]]; then
-            echo "::error::Build completed but no JAR files were found under build/libs."
+          if [[ "${#PLUGIN_JARS[@]}" -ne 1 ]]; then
+            echo "::error::Expected exactly one cwanticheat-bukkit plugin JAR, found ${#PLUGIN_JARS[@]}."
+            printf '%s\n' "${PLUGIN_JARS[@]}"
             exit 1
           fi
+
+          PLUGIN_JAR="${PLUGIN_JARS[0]}"
+          unzip -tq "$PLUGIN_JAR"
+          unzip -p "$PLUGIN_JAR" plugin.yml > "$RUNNER_TEMP/plugin.yml"
+
+          grep -Eq '^name: CWanticheat$' "$RUNNER_TEMP/plugin.yml"
+          grep -Eq '^main: ac\.grim\.grimac\.platform\.bukkit\.GrimACBukkitLoaderPlugin$' "$RUNNER_TEMP/plugin.yml"
+
+          if ! jar tf "$PLUGIN_JAR" | grep -q '^ac/grim/grimac/shaded/packetevents/'; then
+            echo "::error::PacketEvents classes are missing; refusing to publish a non-standalone plugin."
+            exit 1
+          fi
+
+          mkdir -p "$GITHUB_WORKSPACE/dist"
+          cp "$PLUGIN_JAR" "$GITHUB_WORKSPACE/dist/CWanticheat.jar"
+          echo "Verified ready-to-install Bukkit/Paper plugin: dist/CWanticheat.jar"
 
           cd "$PROJECT_DIR"
           zip -qr "$GITHUB_WORKSPACE/dist/CWanticheat-source.zip" . \
             -x '*/build/*' '*/.gradle/*' '.gradle/*' '.git/*' '*/.git/*' '*/.idea/*'
 
-      - name: Upload JAR
+      - name: Upload ready-to-install plugin
         uses: actions/upload-artifact@v4
         with:
           name: CWanticheat-JAR
-          path: dist/jar/*
+          path: dist/CWanticheat.jar
           if-no-files-found: error
           retention-days: 30
 
@@ -128,10 +134,10 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Attach JAR and source to GitHub Release
+      - name: Attach plugin and source to GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/jar/*
+            dist/CWanticheat.jar
             dist/CWanticheat-source.zip
