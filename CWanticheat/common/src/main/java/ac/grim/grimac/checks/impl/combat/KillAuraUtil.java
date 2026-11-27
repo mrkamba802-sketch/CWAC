@@ -1,7 +1,7 @@
 package ac.grim.grimac.checks.impl.combat;
 
 import ac.grim.grimac.player.GrimPlayer;
-import ac.grim.grimac.utils.boundingbox.SimpleCollisionBox;
+import ac.grim.grimac.utils.collisions.datatypes.SimpleCollisionBox;
 import ac.grim.grimac.utils.data.packetentity.PacketEntity;
 import ac.grim.grimac.utils.math.Vector3dm;
 import ac.grim.grimac.utils.nmsutil.ReachUtils;
