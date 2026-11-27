@@ -153,6 +153,115 @@ jobs:
           replace_once(manager, ".put(FastBreak.class, new FastBreak(player))",
               ".put(FastBreak.class, new FastBreak(player))\n                .put(RonexExtraChecks.BadDig.class, new RonexExtraChecks.BadDig(player))")
 
+          config_manager = root / "common/src/main/java/ac/grim/grimac/manager/config/ConfigManagerFileImpl.java"
+          replace_once(config_manager, "import java.util.regex.Pattern;",
+              "import java.util.regex.Matcher;\nimport java.util.regex.Pattern;")
+          replace_once(config_manager, "            ensureLightningCombatPunishments();",
+              "            ensureLightningCombatPunishments();\n            ensureCustomCheckPunishmentGroups();")
+
+          config_manager_helpers = r"""
+    private void ensureCustomCheckPunishmentGroups() {
+        File punishments = getConfigFile("punishments.yml");
+        if (!punishments.exists()) return;
+        try {
+            String before = Files.readString(punishments.toPath());
+            String after = ensureCustomCheckPunishmentGroups(before);
+            if (!after.equals(before)) {
+                Files.writeString(punishments.toPath(), after);
+                LogUtil.info("Added missing CWanticheat check groups to punishments.yml");
+            }
+        } catch (IOException e) {
+            LogUtil.warn("Failed to add CWanticheat punishment groups: " + e);
+        }
+    }
+
+    static String ensureCustomCheckPunishmentGroups(String configString) {
+        if (!hasPunishmentsRoot(configString)) return configString;
+
+        String[][] groups = {
+                {"Aim", "AimA", "AimB", "AimC", "AimD", "AimE"},
+                {"Scaffold", "ScaffoldA", "ScaffoldB", "ScaffoldC", "ScaffoldD"},
+                {"Baritone", "BaritoneA", "BaritoneB"},
+                {"ElytraAim", "ElytraAimA", "ElytraAimB"},
+                {"NoFall", "NoFallA"},
+                {"NoSlow", "NoSlowA", "NoSlowB", "NoSlowC"},
+                {"NoWeb", "NoWebA", "NoWebB"},
+                {"AirStuck", "AirStuck", "AirStuckA"},
+                {"HighJump", "HighJumpA"},
+                {"VoidClip", "VoidClip"},
+                {"Strafe", "StrafeA", "StrafeB"},
+                {"KillAura", "KillAuraA", "KillAuraB", "KillAuraC"},
+                {"BlockReach", "BlockReach"},
+                {"AutoCrystalA", "AutoCrystalA"},
+                {"CriticalsA", "CriticalsA"},
+                {"TriggerBotA", "TriggerBotA"},
+                {"ChestStealerA", "ChestStealerA"},
+                {"AutoFishA", "AutoFishA"},
+                {"BadDig", "BadDig"},
+                {"InvHitA", "InvHitA"},
+                {"AutoClickerA", "AutoClickerA"},
+                {"MaceSwapA", "MaceSwapA"},
+                {"MorePacketsA", "MorePacketsA"},
+                {"AuraA", "AuraA"}
+        };
+
+        String result = configString;
+        for (String[] mapping : groups) {
+            String[] checks = new String[mapping.length - 1];
+            System.arraycopy(mapping, 1, checks, 0, checks.length);
+            result = ensurePunishmentGroupChecks(result, mapping[0], checks);
+        }
+        return result;
+    }
+
+    private static String ensurePunishmentGroupChecks(String configString, String groupName, String[] checkNames) {
+        Pattern groupPattern = Pattern.compile("(?m)^  " + Pattern.quote(groupName) + ":\\s*$");
+        Matcher groupMatcher = groupPattern.matcher(configString);
+        if (!groupMatcher.find()) {
+            StringBuilder out = new StringBuilder(configString);
+            if (!configString.endsWith("\n")) out.append('\n');
+            out.append("\n  ").append(groupName).append(":\n")
+                    .append("    remove-violations-after: 300\n")
+                    .append("    checks:\n");
+            for (String checkName : checkNames) {
+                out.append("      - \"").append(checkName).append("\"\n");
+            }
+            out.append("    commands:\n")
+                    .append("      - \"10:5 [alert]\"\n")
+                    .append("      - \"1:1 [log]\"\n")
+                    .append("      - \"20:10 [webhook]\"\n")
+                    .append("      - \"20:10 [proxy]\"\n");
+            return out.toString();
+        }
+
+        int groupStart = groupMatcher.start();
+        int groupEnd = configString.length();
+        Matcher nextGroup = Pattern.compile("(?m)^  [A-Za-z0-9_-]+:\\s*$").matcher(configString);
+        if (nextGroup.find(groupMatcher.end())) groupEnd = nextGroup.start();
+
+        String groupBlock = configString.substring(groupStart, groupEnd);
+        Matcher checksHeader = Pattern.compile("(?m)^    checks:\\s*$").matcher(groupBlock);
+        if (!checksHeader.find()) return configString;
+
+        StringBuilder additions = new StringBuilder();
+        for (String checkName : checkNames) {
+            Pattern checkPattern = Pattern.compile("(?m)^      -\\s*[\"']?" + Pattern.quote(checkName) + "[\"']?\\s*$");
+            if (!checkPattern.matcher(groupBlock).find()) {
+                additions.append("\n      - \"").append(checkName).append("\"");
+            }
+        }
+        if (additions.length() == 0) return configString;
+
+        String updatedGroup = groupBlock.substring(0, checksHeader.end())
+                + additions
+                + groupBlock.substring(checksHeader.end());
+        return configString.substring(0, groupStart) + updatedGroup + configString.substring(groupEnd);
+    }
+
+""".strip()
+          replace_once(config_manager, "    private void ensureLightningCombatPunishments() {",
+              config_manager_helpers + "\n\n    private void ensureLightningCombatPunishments() {")
+
           tick_manager = root / "common/src/main/java/ac/grim/grimac/manager/TickManager.java"
           replace_once(tick_manager, "import ac.grim.grimac.manager.tick.impl.ResetTick;",
               "import ac.grim.grimac.manager.tick.impl.AirStuckWatchdog;\nimport ac.grim.grimac.manager.tick.impl.ResetTick;")
