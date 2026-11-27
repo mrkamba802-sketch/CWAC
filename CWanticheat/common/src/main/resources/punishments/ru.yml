@@ -278,7 +278,23 @@ Punishments:
       - "InventoryE"
       - "InventoryF"
       - "InventoryG"
+    commands:
+      - "10:10 [alert]"
+      - "10:10 [log]"
+      - "20:20 [webhook]"
+      - "20:20 [proxy]"
+  AutoSwapA:
+    remove-violations-after: 300
+    checks:
       - "AutoSwapA"
+    commands:
+      - "10:10 [alert]"
+      - "10:10 [log]"
+      - "20:20 [webhook]"
+      - "20:20 [proxy]"
+  GhostHandA:
+    remove-violations-after: 300
+    checks:
       - "GhostHandA"
     commands:
       - "10:10 [alert]"
@@ -339,6 +355,26 @@ Punishments:
     remove-violations-after: 300
     checks:
       - "Baritone"
+      - "BaritoneA"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  VoidClip:
+    remove-violations-after: 300
+    checks:
+      - "VoidClip"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  Strafe:
+    remove-violations-after: 300
+    checks:
+      - "StrafeA"
+      - "StrafeB"
     commands:
       - "10:5 [alert]"
       - "1:1 [log]"

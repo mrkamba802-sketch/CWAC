@@ -112,19 +112,19 @@ jobs:
 
           manager = root / "common/src/main/java/ac/grim/grimac/manager/CheckManager.java"
           replace_once(manager, "import ac.grim.grimac.checks.impl.aim.AimDuplicateLook;",
-              "import ac.grim.grimac.checks.impl.aim.AimA;\nimport ac.grim.grimac.checks.impl.aim.AimB;\nimport ac.grim.grimac.checks.impl.aim.AimDuplicateLook;")
+              "import ac.grim.grimac.checks.impl.aim.AimA;\nimport ac.grim.grimac.checks.impl.aim.AimB;\nimport ac.grim.grimac.checks.impl.baritone.BaritoneA;\nimport ac.grim.grimac.checks.impl.aim.AimDuplicateLook;")
           replace_once(manager, "import ac.grim.grimac.checks.impl.groundspoof.NoFall;",
               "import ac.grim.grimac.checks.impl.groundspoof.NoFall;\nimport ac.grim.grimac.checks.impl.groundspoof.NoFallA;")
           replace_once(manager, "import ac.grim.grimac.checks.impl.movement.NoSlow;",
-              "import ac.grim.grimac.checks.impl.movement.AirStuck;\nimport ac.grim.grimac.checks.impl.movement.AirStuckA;\nimport ac.grim.grimac.checks.impl.movement.HighJumpA;\nimport ac.grim.grimac.checks.impl.movement.NoSlow;\nimport ac.grim.grimac.checks.impl.movement.NoSlowA;\nimport ac.grim.grimac.checks.impl.movement.NoWebA;\nimport ac.grim.grimac.checks.impl.movement.NoWebB;")
+              "import ac.grim.grimac.checks.impl.movement.AirStuck;\nimport ac.grim.grimac.checks.impl.movement.AirStuckA;\nimport ac.grim.grimac.checks.impl.movement.HighJumpA;\nimport ac.grim.grimac.checks.impl.movement.NoSlow;\nimport ac.grim.grimac.checks.impl.movement.StrafeA;\nimport ac.grim.grimac.checks.impl.movement.StrafeB;\nimport ac.grim.grimac.checks.impl.movement.VoidClip;\nimport ac.grim.grimac.checks.impl.movement.NoSlowA;\nimport ac.grim.grimac.checks.impl.movement.NoWebA;\nimport ac.grim.grimac.checks.impl.movement.NoWebB;")
           replace_once(manager, ".put(Reach.class, new Reach(player))",
               ".put(Reach.class, new Reach(player))\n                .put(KillAuraA.class, new KillAuraA(player))\n                .put(KillAuraB.class, new KillAuraB(player))")
           replace_once(manager, ".put(NoFall.class, new NoFall(player))",
               ".put(NoFall.class, new NoFall(player))\n                .put(NoFallA.class, new NoFallA(player))")
           replace_once(manager, ".put(AimProcessor.class, new AimProcessor(player))",
-              ".put(AimProcessor.class, new AimProcessor(player))\n                .put(AimA.class, new AimA(player))\n                .put(AimB.class, new AimB(player))")
+              ".put(AimProcessor.class, new AimProcessor(player))\n                .put(AimA.class, new AimA(player))\n                .put(AimB.class, new AimB(player))\n                .put(BaritoneA.class, new BaritoneA(player))")
           replace_once(manager, ".put(NoSlow.class, new NoSlow(player))",
-              ".put(NoSlow.class, new NoSlow(player))\n                .put(NoSlowA.class, new NoSlowA(player))\n                .put(NoWebA.class, new NoWebA(player))\n                .put(NoWebB.class, new NoWebB(player))\n                .put(AirStuck.class, new AirStuck(player))\n                .put(AirStuckA.class, new AirStuckA(player))\n                .put(HighJumpA.class, new HighJumpA(player))")
+              ".put(NoSlow.class, new NoSlow(player))\n                .put(NoSlowA.class, new NoSlowA(player))\n                .put(NoWebA.class, new NoWebA(player))\n                .put(NoWebB.class, new NoWebB(player))\n                .put(AirStuck.class, new AirStuck(player))\n                .put(AirStuckA.class, new AirStuckA(player))\n                .put(HighJumpA.class, new HighJumpA(player))\n                .put(VoidClip.class, new VoidClip(player))\n                .put(StrafeA.class, new StrafeA(player))\n                .put(StrafeB.class, new StrafeB(player))")
 
           ground_spoof = root / "common/src/main/java/ac/grim/grimac/checks/impl/prediction/GroundSpoof.java"
           replace_once(ground_spoof,
@@ -141,6 +141,24 @@ jobs:
               "import ac.grim.grimac.manager.tick.impl.AirStuckWatchdog;\nimport ac.grim.grimac.manager.tick.impl.ResetTick;")
           replace_once(tick_manager, ".put(ResetTick.class, new ResetTick())",
               ".put(ResetTick.class, new ResetTick())\n                .put(AirStuckWatchdog.class, new AirStuckWatchdog())")
+
+          setback = root / "common/src/main/java/ac/grim/grimac/manager/SetbackTeleportUtil.java"
+          replace_once(setback,
+              "        Vector3dm clientVel = lastKnownGoodPosition.vector.clone();",
+              "        boolean hardMovementSetback = !isResync && simulateNextTickPosition;\n        Vector3dm clientVel = lastKnownGoodPosition.vector.clone();\n        if (hardMovementSetback) {\n            clientVel.setX(0.0D);\n            clientVel.setY(0.0D);\n            clientVel.setZ(0.0D);\n        }")
+          replace_once(setback,
+              "        if (futureKb.first() != null && !futureKb.first().isSetback) {",
+              "        if (!hardMovementSetback && futureKb.first() != null && !futureKb.first().isSetback) {")
+          replace_once(setback,
+              "        if (futureExplosion != null && (futureKb.first() == null",
+              "        if (!hardMovementSetback && futureExplosion != null && (futureKb.first() == null")
+          replace_once(setback,
+              "        Vector3d position = lastKnownGoodPosition.pos;",
+              "        Vector3d position = lastKnownGoodPosition.pos;\n        if (hardMovementSetback) {\n            double nudgeX = Math.abs(player.actualMovement.getX()) > 1.0E-6\n                    ? -Math.signum(player.actualMovement.getX()) * 0.001D : 0.001D;\n            double nudgeZ = Math.abs(player.actualMovement.getZ()) > 1.0E-6\n                    ? -Math.signum(player.actualMovement.getZ()) * 0.001D : 0.0D;\n            position = position.withX(position.getX() + nudgeX).withZ(position.getZ() + nudgeZ);\n        }")
+          replace_once(setback,
+              "            if (data.getVelocity() != null && data.getVelocity().lengthSquared() > 0) {",
+              "            if (data.getVelocity() != null) {")
+
 
           engine = root / "common/src/main/java/ac/grim/grimac/predictionengine/predictions/PredictionEngine.java"
           replace_once(engine, "package ac.grim.grimac.predictionengine.predictions;\n",
@@ -192,11 +210,11 @@ jobs:
           # Align the packaged default config with the renamed checks and ship parameters for every new check.
           import re
           new_check_defaults = {
-              "NoSlowA": "NoSlowA:\n    threshold: 0.0001",
+              "NoSlowA": "NoSlowA:\n    threshold: 0.00005",
               "NoWebA": "NoWebA:\n    threshold: 0.0005",
               "NoWebB": "NoWebB:\n    threshold: 0.0003",
               "AirStuck": "AirStuck:\n    threshold: 0.03",
-              "AirStuckA": "AirStuckA:\n    packet-silence-ticks: 7\n    vertical-offset-threshold: 0.015",
+              "AirStuckA": "AirStuckA:\n    packet-silence-ticks: 12\n    vertical-offset-threshold: 0.005\n    action-suppression-ticks: 18",
               "HighJumpA": "HighJumpA:\n    vertical-excess-threshold: 0.12",
               "ScaffoldA": "ScaffoldA:\n    evidence-to-flag: 5",
               "AutoSwapA": "AutoSwapA:\n    cycle-window-ms: 350",
@@ -204,6 +222,10 @@ jobs:
               "AimB": "AimB:\n    snap-threshold: 35.0\n    gcd-tolerance: 0.02",
               "KillAuraA": "KillAuraA:\n    align-threshold: 4.0\n    snap-threshold: 35.0",
               "KillAuraB": "KillAuraB:\n    angle-threshold: 80.0",
+              "BaritoneA": "BaritoneA:\n    required-evidence: 16\n    max-pitch-step: 1.0",
+              "VoidClip": "VoidClip:\n    vertical-error-threshold: 0.35\n    prediction-offset-threshold: 0.15\n    required-streak: 2",
+              "StrafeA": "StrafeA:\n    horizontal-excess-threshold: 0.025\n    prediction-offset-threshold: 0.012\n    required-streak: 4",
+              "StrafeB": "StrafeB:\n    lateral-error-threshold: 0.02\n    prediction-offset-threshold: 0.015\n    required-streak: 3",
           }
           for lang in ("en", "ru"):
               config_path = root / "common/src/main/resources/config" / f"{lang}.yml"
@@ -278,6 +300,10 @@ jobs:
             ac/grim/grimac/checks/impl/inventory/AutoSwapA.class \
             ac/grim/grimac/checks/impl/inventory/GhostHandA.class \
             ac/grim/grimac/checks/impl/scaffolding/ScaffoldA.class \
+            ac/grim/grimac/checks/impl/baritone/BaritoneA.class \
+            ac/grim/grimac/checks/impl/movement/VoidClip.class \
+            ac/grim/grimac/checks/impl/movement/StrafeA.class \
+            ac/grim/grimac/checks/impl/movement/StrafeB.class \
             ac/grim/grimac/manager/tick/impl/AirStuckWatchdog.class; do
             if ! grep -q "^$class$" "$RUNNER_TEMP/plugin-entries.txt"; then
               echo "::error::Missing new check class in the plugin: $class"

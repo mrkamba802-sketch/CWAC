@@ -1,21 +1,11 @@
 # CWanticheat punishment configuration update
 
-The build keeps only the Russian (`ru`) and English (`en`) locale files. Other locale YAML files are removed from the packaged resources.
+Only Russian (`ru.yml`) and English (`en.yml`) locale files are retained.
 
-Renamed checks:
-- `Simulation` is now displayed and punished as `Prediction`.
-- `AntiKB` is now displayed and punished as `VelocityA` (the existing `Knockback` tuning section remains for compatibility).
+- `AutoSwapA` and `GhostHandA` each have their own dedicated punishment group.
+- `BaritoneA` is grouped with the existing `Baritone` check.
+- `VoidClip` has its own punishment group.
+- `StrafeA` and `StrafeB` are grouped under `Strafe`.
+- The existing movement, combat, inventory, and packet checks remain grouped by their current families.
 
-New checks included in the punishment groups:
-- `NoFallA` under `NoFall`.
-- `AirStuck` and `AirStuckA` under `AirStuck`.
-- `NoSlowA` under `NoSlow`.
-- `AimA` and `AimB` under `Aim`.
-- `NoWebA` and `NoWebB` under `NoWeb`.
-- `KillAuraA` and `KillAuraB` under `KillAura`.
-- `HighJumpA` under `HighJump`.
-- `ScaffoldA` under `Scaffold`.
-- `AutoSwapA` and `GhostHandA` under `Inventory`.
-- Other registered checks remain grouped by their existing families.
-
-The RU and EN punishment files list all 151 registered check names exactly once across 35 groups. The Actions workflow verifies the dedicated Bukkit/Paper plugin JAR and includes the modified source archive.
+The build validates the new check classes and adds their default configuration before packaging the Bukkit/Paper plugin. The RU and EN punishment files contain 155 unique checks across 39 groups.

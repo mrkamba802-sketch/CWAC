@@ -10,11 +10,11 @@ import ac.grim.grimac.utils.anticheat.update.PredictionComplete;
 import com.github.retrooper.packetevents.protocol.player.ClientVersion;
 import org.jetbrains.annotations.NotNull;
 
-@CheckData(name = "NoSlowA", stableKey = "grim.movement.no_slow_a", description = "Exceeded item-use movement limits across consecutive predictions", setback = 5, decay = 0.02)
+@CheckData(name = "NoSlowA", stableKey = "grim.movement.no_slow_a", description = "Detects tiny item-use movement excess across consecutive prediction samples", setback = 2, decay = 0.01)
 public class NoSlowA extends Check implements PostPredictionListener {
     private static final Verbose V = Verbose.of("bestOffset={f64}, threshold={f64}, streak={uint}");
     private double bestOffset = Double.POSITIVE_INFINITY;
-    private double threshold = 0.0001;
+    private double threshold = 0.00005;
     private int suspiciousTicks;
     private boolean sawCandidate;
 
@@ -23,16 +23,19 @@ public class NoSlowA extends Check implements PostPredictionListener {
     }
 
     public void handlePredictionAnalysis(double offset) {
-        sawCandidate = true;
-        bestOffset = Math.min(bestOffset, offset);
+        if (Double.isFinite(offset) && offset >= 0.0) {
+            sawCandidate = true;
+            bestOffset = Math.min(bestOffset, offset);
+        }
     }
 
     @Override
     public void onPredictionComplete(PredictionComplete predictionComplete) {
         if (!predictionComplete.isChecked() || !player.packetStateData.isSlowedByUsingItem()
-                || player.inVehicle() || player.isFlying || player.isGliding
+                || player.inVehicle() || player.isFlying || player.isGliding || player.isSwimming
                 || player.packetStateData.lastPacketWasTeleport
                 || player.getSetbackTeleportUtil().blockOffsets
+                || player.uncertaintyHandler.wasAffectedByStuckSpeed()
                 || (player.getClientVersion().isOlderThanOrEquals(ClientVersion.V_1_8)
                     && player.checkManager.getNoSlow().didSlotChangeLastTick)) {
             suspiciousTicks = 0;
@@ -60,6 +63,8 @@ public class NoSlowA extends Check implements PostPredictionListener {
 
     @Override
     public void onReload(@NotNull ConfigManager config) {
-        threshold = config.getDoubleElse(getConfigName() + ".threshold", 0.0001);
+        // A config may make this check stricter, but must not silently loosen the built-in threshold.
+        threshold = Math.max(0.0000001, Math.min(0.00005,
+                config.getDoubleElse(getConfigName() + ".threshold", 0.00005)));
     }
 }
