@@ -174,7 +174,7 @@ public final class RonexExtraChecks {
         public ScaffoldC(GrimPlayer player) { super(player); }
         private boolean rayHitsBlock(Vector3i block, float yaw, float pitch) {
             SimpleCollisionBox box = new SimpleCollisionBox(block);
-            Ray ray = new Ray(player, player.x, player.y + player.getEyeHeight(), player.z, yaw, pitch);
+            Ray ray = Ray.from(player, player.x, player.y + player.getEyeHeight(), player.z, yaw, pitch);
             return box.intersectsRay(ray, 0.0F, (float) maximumDistance) != null;
         }
         @Override public void onPacketReceive(PacketReceiveEvent event) {
