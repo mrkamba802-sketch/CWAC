@@ -111,7 +111,7 @@ public final class RonexExtraChecks {
     }
 
     @CheckData(name = "ScaffoldB", stableKey = "ronexgrim.world.scaffold_air_bridge",
-            description = "Repeated block placements beneath the player during descending movement", experimental = true)
+            description = "Repeated block placements beneath the player during descending movement")
     public static class ScaffoldB extends Check implements PacketReceiveListener, PostPredictionListener {
         private final Deque<Long> intervals = new ArrayDeque<>();
         private long lastPlacementAt;
@@ -166,7 +166,7 @@ public final class RonexExtraChecks {
     }
 
     @CheckData(name = "ScaffoldC", stableKey = "ronexgrim.world.scaffold_look_mismatch",
-            description = "Repeated block placements while the view ray missed the clicked block", experimental = true)
+            description = "Repeated block placements while the view ray missed the clicked block")
     public static class ScaffoldC extends Check implements PacketReceiveListener {
         private final Deque<Boolean> placementMisses = new ArrayDeque<>();
         private double minimumSpeed, maximumDistance;
@@ -210,7 +210,7 @@ public final class RonexExtraChecks {
     }
 
     @CheckData(name = "AutoCrystalA", stableKey = "ronexgrim.combat.autocrystal_cycle",
-            description = "Detected repeated rapid end-crystal placement and break cycles", experimental = true)
+            description = "Detected repeated rapid end-crystal placement and break cycles")
     public static class AutoCrystalA extends Check implements PacketReceiveListener {
         private final Deque<Long> cycles = new ArrayDeque<>();
         private long lastCrystalUse;
@@ -252,8 +252,7 @@ public final class RonexExtraChecks {
     }
 
     @CheckData(name = "ChestStealerA", stableKey = "ronexgrim.inventory.container_click_burst",
-            description = "Moved items out of a container through an implausibly fast burst of inventory clicks",
-            experimental = true)
+            description = "Moved items out of a container through an implausibly fast burst of inventory clicks")
     public static class ChestStealerA extends Check implements PacketReceiveListener {
         private final Deque<Long> clicks = new ArrayDeque<>();
         private final Deque<Long> quickMoves = new ArrayDeque<>();
@@ -292,7 +291,7 @@ public final class RonexExtraChecks {
     }
 
     @CheckData(name = "BaritoneB", stableKey = "ronexgrim.movement.baritone_turn_regularity",
-            description = "Repeated highly uniform movement-linked rotation corrections", experimental = true)
+            description = "Repeated highly uniform movement-linked rotation corrections")
     public static class BaritoneB extends Check
             implements RotationListener, PostPredictionListener, PacketReceiveListener {
         private final Deque<Long> turnMagnitudes = new ArrayDeque<>();
@@ -367,8 +366,7 @@ public final class RonexExtraChecks {
     }
 
     @CheckData(name = "BadDig", stableKey = "ronexgrim.world.bad_dig",
-            description = "Detects repeated block-dig completion packets arriving implausibly soon after starts",
-            experimental = true)
+            description = "Detects repeated block-dig completion packets arriving implausibly soon after starts")
     public static class BadDig extends Check implements PacketReceiveListener {
         private final Deque<Boolean> samples = new ArrayDeque<>();
         private String activeBlock = "";
