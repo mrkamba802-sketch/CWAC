@@ -1,15 +1,21 @@
 # CWanticheat punishment configuration update
 
-These 11 locale files replace the matching files inside `CWanticheat-source.zip`.
-They are grouped by the registered `@CheckData` names from the source archive plus the new checks added in this branch.
+The build keeps only the Russian (`ru`) and English (`en`) locale files. Other locale YAML files are removed from the packaged resources.
 
-- `NoFallA` is included with `NoFall`; `GroundSpoof` remains a separate family.
-- `NoSlowA` is included with `NoSlow`.
-- `AimA` and `AimB` are included with the existing `Aim` family.
-- `AirStuck`, `NoWebA`/`NoWebB`, and `KillAuraA`/`KillAuraB` have dedicated punishment groups.
-- `Timer` contains `Timer`, `TimerLimit`, `TickTimer`, `NegativeTimer`, and `VehicleTimer`.
-- `BadPackets` contains the 25 actual checks `BadPacketsA`–`BadPacketsZ` (this version has no `BadPacketsT`).
-- Other lettered families list every registered subtype.
-- `InvalidInteractCursor`, `InvalidInteractTarget`, and `SelfInteract` remain in their own `Interaction` group.
+Renamed checks:
+- `Simulation` is now displayed and punished as `Prediction`.
+- `AntiKB` is now displayed and punished as `VelocityA` (the existing `Knockback` tuning section remains for compatibility).
 
-The configuration lists all 146 registered checks exactly once in each locale across 31 punishment groups.
+New checks included in the punishment groups:
+- `NoFallA` under `NoFall`.
+- `AirStuck` and `AirStuckA` under `AirStuck`.
+- `NoSlowA` under `NoSlow`.
+- `AimA` and `AimB` under `Aim`.
+- `NoWebA` and `NoWebB` under `NoWeb`.
+- `KillAuraA` and `KillAuraB` under `KillAura`.
+- `HighJumpA` under `HighJump`.
+- `ScaffoldA` under `Scaffold`.
+- `AutoSwapA` and `GhostHandA` under `Inventory`.
+- Other registered checks remain grouped by their existing families.
+
+The RU and EN punishment files list all 151 registered check names exactly once across 35 groups. The Actions workflow verifies the dedicated Bukkit/Paper plugin JAR and includes the modified source archive.
