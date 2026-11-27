@@ -9,10 +9,10 @@
 # Every registered @CheckData check is listed exactly once in its own family section.
 
 Punishments:
-  Simulation:
+  Prediction:
     remove-violations-after: 300
     checks:
-      - "Simulation"
+      - "Prediction"
     commands:
       - "100:40 [alert]"
       - "1:1 [log]"
@@ -153,6 +153,25 @@ Punishments:
     remove-violations-after: 300
     checks:
       - "AirStuck"
+      - "AirStuckA"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  HighJump:
+    remove-violations-after: 300
+    checks:
+      - "HighJumpA"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  Scaffold:
+    remove-violations-after: 300
+    checks:
+      - "ScaffoldA"
     commands:
       - "10:5 [alert]"
       - "1:1 [log]"
@@ -222,10 +241,10 @@ Punishments:
       - "1:1 [log]"
       - "20:10 [webhook]"
       - "20:10 [proxy]"
-  Knockback:
+  Velocity:
     remove-violations-after: 300
     checks:
-      - "AntiKB"
+      - "VelocityA"
     commands:
       - "5:5 [alert]"
       - "1:1 [log]"
@@ -259,6 +278,8 @@ Punishments:
       - "InventoryE"
       - "InventoryF"
       - "InventoryG"
+      - "AutoSwapA"
+      - "GhostHandA"
     commands:
       - "10:10 [alert]"
       - "10:10 [log]"
