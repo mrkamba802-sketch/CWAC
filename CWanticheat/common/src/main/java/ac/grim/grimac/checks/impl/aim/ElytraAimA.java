@@ -11,7 +11,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 @CheckData(name = "ElytraAimA", stableKey = "ronexgrim.aim.elytra_snap",
-        description = "Repeated attack-timed snap rotations while gliding", experimental = true)
+        description = "Repeated attack-timed snap rotations while gliding")
 public class ElytraAimA extends AimHitCheck implements PacketReceiveListener {
     private final Deque<Boolean> hits = new ArrayDeque<>();
     private double minimumSnapDegrees, maximumAimError;
