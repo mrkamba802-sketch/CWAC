@@ -83,7 +83,7 @@ public class AirStuckA extends Check implements PacketReceiveListener, PostPredi
         // One jump-apex tick can have almost no vertical delta. Require repeated divergence
         // while the server continues to predict a meaningful downward velocity.
         boolean ignoredGravity = predictedY < -0.12
-                && actualY > -0.01
+                && actualY > -0.025
                 && complete.getOffset() > verticalOffsetThreshold;
 
         if (ignoredGravity) {
