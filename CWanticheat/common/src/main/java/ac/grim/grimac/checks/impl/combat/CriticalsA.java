@@ -15,8 +15,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 @CheckData(name = "CriticalsA", stableKey = "cwanticheat.combat.criticals_a",
-        description = "Repeated attacks while the client claims airborne but server movement remains grounded",
-        experimental = true)
+        description = "Repeated attacks while the client claims airborne but server movement remains grounded")
 public class CriticalsA extends Check implements PacketReceiveListener {
     private final Deque<Long> suspiciousAttacks = new ArrayDeque<>();
     private double groundVerticalEpsilon;
