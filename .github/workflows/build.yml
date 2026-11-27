@@ -97,6 +97,7 @@ jobs:
           cp -a "$SOURCE_OVERLAY/." "$PROJECT_DIR/common/src/main/java/"
           echo "Applied new check source files from the repository."
           grep -q 'stableKey = "grim.inventory.auto_swap_c"' "$PROJECT_DIR/common/src/main/java/ac/grim/grimac/checks/impl/inventory/AutoSwapC.java"
+          grep -q 'name = "AutoClickerA"' "$SOURCE_OVERLAY/ac/grim/grimac/checks/impl/ronex/RonexNewChecks.java"
 
           python3 - "$PROJECT_DIR" <<'PY'
           from pathlib import Path
@@ -116,6 +117,8 @@ jobs:
               "import ac.grim.grimac.checks.impl.aim.AimA;\nimport ac.grim.grimac.checks.impl.aim.AimB;\nimport ac.grim.grimac.checks.impl.baritone.BaritoneA;\nimport ac.grim.grimac.checks.impl.aim.AimDuplicateLook;")
           replace_once(manager, "import ac.grim.grimac.checks.impl.aim.AimDuplicateLook;",
               "import ac.grim.grimac.checks.impl.combat.CriticalsA;\nimport ac.grim.grimac.checks.impl.combat.InvHitA;\nimport ac.grim.grimac.checks.impl.combat.TriggerBotA;\nimport ac.grim.grimac.checks.impl.aim.ElytraAimA;\nimport ac.grim.grimac.checks.impl.aim.ElytraAimB;\nimport ac.grim.grimac.checks.impl.ronex.RonexAdvancedChecks;\nimport ac.grim.grimac.checks.impl.ronex.RonexExtraChecks;\nimport ac.grim.grimac.checks.impl.aim.AimDuplicateLook;")
+          replace_once(manager, "import ac.grim.grimac.checks.impl.ronex.RonexExtraChecks;",
+              "import ac.grim.grimac.checks.impl.ronex.RonexExtraChecks;\nimport ac.grim.grimac.checks.impl.ronex.RonexNewChecks;")
           replace_once(manager, "import ac.grim.grimac.checks.impl.groundspoof.NoFall;",
               "import ac.grim.grimac.checks.impl.groundspoof.NoFall;\nimport ac.grim.grimac.checks.impl.groundspoof.NoFallA;")
           replace_once(manager, "import ac.grim.grimac.checks.impl.movement.NoSlow;",
@@ -125,7 +128,7 @@ jobs:
           replace_once(manager, ".put(NoFall.class, new NoFall(player))",
               ".put(NoFall.class, new NoFall(player))\n                .put(NoFallA.class, new NoFallA(player))")
           replace_once(manager, ".put(AimProcessor.class, new AimProcessor(player))",
-              ".put(AimProcessor.class, new AimProcessor(player))\n                .put(AimA.class, new AimA(player))\n                .put(AimB.class, new AimB(player))\n                .put(BaritoneA.class, new BaritoneA(player))")
+              ".put(AimProcessor.class, new AimProcessor(player))\n                .put(AimA.class, new AimA(player))\n                .put(AimB.class, new AimB(player))\n                .put(RonexNewChecks.AimC.class, new RonexNewChecks.AimC(player))\n                .put(RonexNewChecks.AimD.class, new RonexNewChecks.AimD(player))\n                .put(RonexNewChecks.AimE.class, new RonexNewChecks.AimE(player))\n                .put(BaritoneA.class, new BaritoneA(player))")
           replace_once(manager, ".put(NoSlow.class, new NoSlow(player))",
               ".put(NoSlow.class, new NoSlow(player))\n                .put(NoSlowA.class, new NoSlowA(player))\n                .put(NoSlowB.class, new NoSlowB(player))\n                .put(NoSlowC.class, new NoSlowC(player))\n                .put(NoWebA.class, new NoWebA(player))\n                .put(NoWebB.class, new NoWebB(player))\n                .put(AirStuck.class, new AirStuck(player))\n                .put(AirStuckA.class, new AirStuckA(player))\n                .put(HighJumpA.class, new HighJumpA(player))\n                .put(VoidClip.class, new VoidClip(player))\n                .put(StrafeA.class, new StrafeA(player))\n                .put(StrafeB.class, new StrafeB(player))")
 
@@ -140,11 +143,11 @@ jobs:
               ".put(InventoryG.class, new InventoryG(player))\n                .put(AutoSwapA.class, new AutoSwapA(player))\n                .put(AutoSwapC.class, new AutoSwapC(player))\n                .put(GhostHandA.class, new GhostHandA(player))")
 
           replace_once(manager, ".put(KillAuraC.class, new KillAuraC(player))",
-              ".put(KillAuraC.class, new KillAuraC(player))\n                .put(CriticalsA.class, new CriticalsA(player))\n                .put(TriggerBotA.class, new TriggerBotA(player))\n                .put(InvHitA.class, new InvHitA(player))\n                .put(RonexExtraChecks.AutoCrystalA.class, new RonexExtraChecks.AutoCrystalA(player))\n                .put(RonexExtraChecks.BlockReach.class, new RonexExtraChecks.BlockReach(player))")
+              ".put(KillAuraC.class, new KillAuraC(player))\n                .put(CriticalsA.class, new CriticalsA(player))\n                .put(TriggerBotA.class, new TriggerBotA(player))\n                .put(InvHitA.class, new InvHitA(player))\n                .put(RonexExtraChecks.AutoCrystalA.class, new RonexExtraChecks.AutoCrystalA(player))\n                .put(RonexExtraChecks.BlockReach.class, new RonexExtraChecks.BlockReach(player))\n                .put(RonexNewChecks.AutoClickerA.class, new RonexNewChecks.AutoClickerA(player))\n                .put(RonexNewChecks.MaceSwapA.class, new RonexNewChecks.MaceSwapA(player))\n                .put(RonexNewChecks.MorePacketsA.class, new RonexNewChecks.MorePacketsA(player))\n                .put(RonexNewChecks.AuraA.class, new RonexNewChecks.AuraA(player))")
           replace_once(manager, ".put(BaritoneA.class, new BaritoneA(player))",
               ".put(BaritoneA.class, new BaritoneA(player))\n                .put(RonexExtraChecks.BaritoneB.class, new RonexExtraChecks.BaritoneB(player))\n                .put(ElytraAimA.class, new ElytraAimA(player))\n                .put(ElytraAimB.class, new ElytraAimB(player))")
           replace_once(manager, ".put(ScaffoldA.class, new ScaffoldA(player))",
-              ".put(ScaffoldA.class, new ScaffoldA(player))\n                .put(RonexExtraChecks.ScaffoldB.class, new RonexExtraChecks.ScaffoldB(player))\n                .put(RonexExtraChecks.ScaffoldC.class, new RonexExtraChecks.ScaffoldC(player))")
+              ".put(ScaffoldA.class, new ScaffoldA(player))\n                .put(RonexExtraChecks.ScaffoldB.class, new RonexExtraChecks.ScaffoldB(player))\n                .put(RonexExtraChecks.ScaffoldC.class, new RonexExtraChecks.ScaffoldC(player))\n                .put(RonexNewChecks.ScaffoldD.class, new RonexNewChecks.ScaffoldD(player))")
           replace_once(manager, ".put(GhostHandA.class, new GhostHandA(player))",
               ".put(GhostHandA.class, new GhostHandA(player))\n                .put(RonexExtraChecks.ChestStealerA.class, new RonexExtraChecks.ChestStealerA(player))\n                .put(RonexAdvancedChecks.AutoFishA.class, new RonexAdvancedChecks.AutoFishA(player))")
           replace_once(manager, ".put(FastBreak.class, new FastBreak(player))",
