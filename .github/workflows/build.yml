@@ -158,6 +158,9 @@ jobs:
           replace_once(setback,
               "            if (data.getVelocity() != null && data.getVelocity().lengthSquared() > 0) {",
               "            if (data.getVelocity() != null) {")
+          replace_once(setback,
+              "            simulateFriction(clientVel);",
+              "            if (hardMovementSetback) {\n                clientVel.setX(0.0D);\n                clientVel.setY(0.0D);\n                clientVel.setZ(0.0D);\n            } else {\n                simulateFriction(clientVel);\n            }")
 
 
           engine = root / "common/src/main/java/ac/grim/grimac/predictionengine/predictions/PredictionEngine.java"
