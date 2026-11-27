@@ -31,6 +31,7 @@ Punishments:
     remove-violations-after: 300
     checks:
       - "NoFall"
+      - "NoFallA"
     commands:
       - "100:40 [alert]"
       - "1:1 [log]"
@@ -142,6 +143,36 @@ Punishments:
     remove-violations-after: 300
     checks:
       - "NoSlow"
+      - "NoSlowA"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  AirStuck:
+    remove-violations-after: 300
+    checks:
+      - "AirStuck"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  NoWeb:
+    remove-violations-after: 300
+    checks:
+      - "NoWebA"
+      - "NoWebB"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  KillAura:
+    remove-violations-after: 300
+    checks:
+      - "KillAuraA"
+      - "KillAuraB"
     commands:
       - "10:5 [alert]"
       - "1:1 [log]"
@@ -349,6 +380,8 @@ Punishments:
   Aim:
     remove-violations-after: 300
     checks:
+      - "AimA"
+      - "AimB"
       - "AimDuplicateLook"
       - "AimModulo360"
     commands:
