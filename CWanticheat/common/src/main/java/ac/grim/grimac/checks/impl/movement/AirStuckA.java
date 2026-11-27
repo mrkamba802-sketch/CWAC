@@ -51,14 +51,13 @@ public class AirStuckA extends Check implements PacketReceiveListener, PostPredi
     }
 
     private boolean isRestrictedAction(PacketReceiveEvent event) {
-        PacketType type = event.getPacketType();
-        if (type == PacketType.Play.Client.ATTACK
-                || type == PacketType.Play.Client.PLAYER_DIGGING
-                || type == PacketType.Play.Client.PLAYER_BLOCK_PLACEMENT) {
+        if (event.getPacketType() == PacketType.Play.Client.ATTACK
+                || event.getPacketType() == PacketType.Play.Client.PLAYER_DIGGING
+                || event.getPacketType() == PacketType.Play.Client.PLAYER_BLOCK_PLACEMENT) {
             return true;
         }
 
-        if (type == PacketType.Play.Client.INTERACT_ENTITY) {
+        if (event.getPacketType() == PacketType.Play.Client.INTERACT_ENTITY) {
             return new WrapperPlayClientInteractEntity(event).getAction()
                     == WrapperPlayClientInteractEntity.InteractAction.ATTACK;
         }
