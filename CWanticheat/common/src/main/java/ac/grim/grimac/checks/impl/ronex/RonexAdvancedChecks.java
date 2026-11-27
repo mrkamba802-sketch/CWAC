@@ -36,7 +36,7 @@ public final class RonexAdvancedChecks {
     }
 
     @CheckData(name = "AutoFishA", stableKey = "ronexgrim.misc.autofish_rapid",
-            description = "Repeated unusually rapid fishing-rod use cycles", experimental = true)
+            description = "Repeated unusually rapid fishing-rod use cycles")
     public static class AutoFishA extends Check implements PacketReceiveListener {
         private final Deque<Long> intervals = new ArrayDeque<>();
         private long lastUse, minimumInterval, maximumInterval;
