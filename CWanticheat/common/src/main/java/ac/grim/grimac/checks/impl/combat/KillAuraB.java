@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 @CheckData(name = "KillAuraB", stableKey = "grim.combat.killaura_back_side", description = "Repeatedly attacked living targets while looking away from them", setback = 8, decay = 0.02)
 public class KillAuraB extends Check implements PacketReceiveListener {
     private static final Verbose V = Verbose.of("angle={f64}, threshold={f64}, badHits={uint}, samples={uint}");
-    private double angleThreshold = 100.0;
+    private double angleThreshold = 80.0;
     private int badHits;
     private int samples;
 
@@ -59,6 +59,6 @@ public class KillAuraB extends Check implements PacketReceiveListener {
 
     @Override
     public void onReload(@NotNull ConfigManager config) {
-        angleThreshold = config.getDoubleElse(getConfigName() + ".angle-threshold", 100.0);
+        angleThreshold = config.getDoubleElse(getConfigName() + ".angle-threshold", 80.0);
     }
 }
