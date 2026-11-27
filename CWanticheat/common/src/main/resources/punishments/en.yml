@@ -144,6 +144,8 @@ Punishments:
     checks:
       - "NoSlow"
       - "NoSlowA"
+      - "NoSlowB"
+      - "NoSlowC"
     commands:
       - "10:5 [alert]"
       - "1:1 [log]"
@@ -192,6 +194,7 @@ Punishments:
     checks:
       - "KillAuraA"
       - "KillAuraB"
+      - "KillAuraC"
     commands:
       - "10:5 [alert]"
       - "1:1 [log]"

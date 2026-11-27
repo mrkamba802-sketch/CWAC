@@ -116,15 +116,15 @@ jobs:
           replace_once(manager, "import ac.grim.grimac.checks.impl.groundspoof.NoFall;",
               "import ac.grim.grimac.checks.impl.groundspoof.NoFall;\nimport ac.grim.grimac.checks.impl.groundspoof.NoFallA;")
           replace_once(manager, "import ac.grim.grimac.checks.impl.movement.NoSlow;",
-              "import ac.grim.grimac.checks.impl.movement.AirStuck;\nimport ac.grim.grimac.checks.impl.movement.AirStuckA;\nimport ac.grim.grimac.checks.impl.movement.HighJumpA;\nimport ac.grim.grimac.checks.impl.movement.NoSlow;\nimport ac.grim.grimac.checks.impl.movement.StrafeA;\nimport ac.grim.grimac.checks.impl.movement.StrafeB;\nimport ac.grim.grimac.checks.impl.movement.VoidClip;\nimport ac.grim.grimac.checks.impl.movement.NoSlowA;\nimport ac.grim.grimac.checks.impl.movement.NoWebA;\nimport ac.grim.grimac.checks.impl.movement.NoWebB;")
+              "import ac.grim.grimac.checks.impl.movement.AirStuck;\nimport ac.grim.grimac.checks.impl.movement.AirStuckA;\nimport ac.grim.grimac.checks.impl.movement.HighJumpA;\nimport ac.grim.grimac.checks.impl.movement.NoSlow;\nimport ac.grim.grimac.checks.impl.movement.StrafeA;\nimport ac.grim.grimac.checks.impl.movement.StrafeB;\nimport ac.grim.grimac.checks.impl.movement.VoidClip;\nimport ac.grim.grimac.checks.impl.movement.NoSlowA;\nimport ac.grim.grimac.checks.impl.movement.NoSlowB;\nimport ac.grim.grimac.checks.impl.movement.NoSlowC;\nimport ac.grim.grimac.checks.impl.movement.NoWebA;\nimport ac.grim.grimac.checks.impl.movement.NoWebB;")
           replace_once(manager, ".put(Reach.class, new Reach(player))",
-              ".put(Reach.class, new Reach(player))\n                .put(KillAuraA.class, new KillAuraA(player))\n                .put(KillAuraB.class, new KillAuraB(player))")
+              ".put(Reach.class, new Reach(player))\n                .put(KillAuraA.class, new KillAuraA(player))\n                .put(KillAuraB.class, new KillAuraB(player))\n                .put(KillAuraC.class, new KillAuraC(player))")
           replace_once(manager, ".put(NoFall.class, new NoFall(player))",
               ".put(NoFall.class, new NoFall(player))\n                .put(NoFallA.class, new NoFallA(player))")
           replace_once(manager, ".put(AimProcessor.class, new AimProcessor(player))",
               ".put(AimProcessor.class, new AimProcessor(player))\n                .put(AimA.class, new AimA(player))\n                .put(AimB.class, new AimB(player))\n                .put(BaritoneA.class, new BaritoneA(player))")
           replace_once(manager, ".put(NoSlow.class, new NoSlow(player))",
-              ".put(NoSlow.class, new NoSlow(player))\n                .put(NoSlowA.class, new NoSlowA(player))\n                .put(NoWebA.class, new NoWebA(player))\n                .put(NoWebB.class, new NoWebB(player))\n                .put(AirStuck.class, new AirStuck(player))\n                .put(AirStuckA.class, new AirStuckA(player))\n                .put(HighJumpA.class, new HighJumpA(player))\n                .put(VoidClip.class, new VoidClip(player))\n                .put(StrafeA.class, new StrafeA(player))\n                .put(StrafeB.class, new StrafeB(player))")
+              ".put(NoSlow.class, new NoSlow(player))\n                .put(NoSlowA.class, new NoSlowA(player))\n                .put(NoSlowB.class, new NoSlowB(player))\n                .put(NoSlowC.class, new NoSlowC(player))\n                .put(NoWebA.class, new NoWebA(player))\n                .put(NoWebB.class, new NoWebB(player))\n                .put(AirStuck.class, new AirStuck(player))\n                .put(AirStuckA.class, new AirStuckA(player))\n                .put(HighJumpA.class, new HighJumpA(player))\n                .put(VoidClip.class, new VoidClip(player))\n                .put(StrafeA.class, new StrafeA(player))\n                .put(StrafeB.class, new StrafeB(player))")
 
           ground_spoof = root / "common/src/main/java/ac/grim/grimac/checks/impl/prediction/GroundSpoof.java"
           replace_once(ground_spoof,
@@ -184,10 +184,10 @@ jobs:
 
           engine = root / "common/src/main/java/ac/grim/grimac/predictionengine/predictions/PredictionEngine.java"
           replace_once(engine, "package ac.grim.grimac.predictionengine.predictions;\n",
-              "package ac.grim.grimac.predictionengine.predictions;\n\nimport ac.grim.grimac.checks.impl.movement.NoSlowA;\nimport ac.grim.grimac.checks.impl.movement.NoWebA;\nimport ac.grim.grimac.checks.impl.movement.NoWebB;\n")
+              "package ac.grim.grimac.predictionengine.predictions;\n\nimport ac.grim.grimac.checks.impl.movement.NoSlowA;\nimport ac.grim.grimac.checks.impl.movement.NoSlowB;\nimport ac.grim.grimac.checks.impl.movement.NoSlowC;\nimport ac.grim.grimac.checks.impl.movement.NoWebA;\nimport ac.grim.grimac.checks.impl.movement.NoWebB;\n")
           replace_once(engine,
               "player.checkManager.getNoSlow().handlePredictionAnalysis(Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy)));",
-              "double itemUseOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy));\n                player.checkManager.getNoSlow().handlePredictionAnalysis(itemUseOffset);\n                player.checkManager.get(NoSlowA.class).handlePredictionAnalysis(itemUseOffset);")
+              "double itemUseOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy));\n                player.checkManager.getNoSlow().handlePredictionAnalysis(itemUseOffset);\n                player.checkManager.get(NoSlowA.class).handlePredictionAnalysis(itemUseOffset);\n                player.checkManager.get(NoSlowB.class).handlePredictionAnalysis(itemUseOffset);\n                player.checkManager.get(NoSlowC.class).handlePredictionAnalysis(itemUseOffset);")
           replace_once(engine,
               "            if (player.checkManager.getKnockbackHandler().shouldIgnoreForPrediction(clientVelAfterInput) ||",
               "            int webMask = StuckSpeed.COBWEB.getIndex() | StuckSpeed.COBWEB_WEAVING.getIndex();\n            if ((clientVelAfterInput.stuckSpeedMultiplier.getIndex() & webMask) != 0) {\n                double webOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy));\n                player.checkManager.get(NoWebA.class).handlePredictionAnalysis(webOffset);\n\n                double horizontalError = Math.pow(outputVel.getX() - player.actualMovement.getX(), 2)\n                        + Math.pow(outputVel.getZ() - player.actualMovement.getZ(), 2);\n                double horizontalOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(horizontalError));\n                player.checkManager.get(NoWebB.class).handlePredictionAnalysis(horizontalOffset);\n            }\n\n            if (player.checkManager.getKnockbackHandler().shouldIgnoreForPrediction(clientVelAfterInput) ||")
@@ -233,6 +233,8 @@ jobs:
           import re
           new_check_defaults = {
               "NoSlowA": "NoSlowA:\n    threshold: 0.00005",
+              "NoSlowB": "NoSlowB:\n    threshold: 0.0025\n    sample-window: 8\n    required-samples: 6\n    evidence-timeout-ms: 900",
+              "NoSlowC": "NoSlowC:\n    threshold: 0.00012\n    sample-window: 8\n    required-samples: 6",
               "NoWebA": "NoWebA:\n    threshold: 0.0005",
               "NoWebB": "NoWebB:\n    threshold: 0.0003",
               "AirStuck": "AirStuck:\n    threshold: 0.03",
@@ -242,8 +244,9 @@ jobs:
               "AutoSwapA": "AutoSwapA:\n    cycle-window-ms: 350",
               "GhostHandA": "GhostHandA:\n    evidence-to-cancel: 2",
               "AimB": "AimB:\n    snap-threshold: 35.0\n    gcd-tolerance: 0.02",
-              "KillAuraA": "KillAuraA:\n    align-threshold: 4.0\n    snap-threshold: 35.0",
-              "KillAuraB": "KillAuraB:\n    angle-threshold: 80.0",
+              "KillAuraA": "KillAuraA:\n    maximum-attack-gap-ms: 80\n    burst-window-ms: 5000\n    required-bursts: 3",
+              "KillAuraB": "KillAuraB:\n    minimum-excess-degrees: 10.0\n    maximum-distance: 5.0\n    required-hits: 4\n    hit-window: 8",
+              "KillAuraC": "KillAuraC:\n    maximum-distance: 5.0\n    required-hits: 3\n    hit-window: 6",
               "BaritoneA": "BaritoneA:\n    required-evidence: 16\n    max-pitch-step: 1.0",
               "VoidClip": "VoidClip:\n    vertical-error-threshold: 0.35\n    prediction-offset-threshold: 0.15\n    required-streak: 2",
               "StrafeA": "StrafeA:\n    horizontal-excess-threshold: 0.025\n    prediction-offset-threshold: 0.012\n    required-streak: 4",
@@ -263,6 +266,13 @@ jobs:
               if count != 1:
                   raise SystemExit(f"NoSlow threshold not found in {config_path}")
               config_text = config_text[:match.start(1)] + no_slow_section + config_text[match.end(1):]
+
+              # Replace old KillAuraA/B config shapes with settings for the imported algorithms.
+              for key in ("KillAuraA", "KillAuraB"):
+                  pattern = rf"(?ms)^{re.escape(key)}:\n.*?(?=^[A-Za-z][A-Za-z0-9_-]*:\n|\Z)"
+                  config_text, replaced = re.subn(pattern, new_check_defaults[key] + "\n\n", config_text, count=1)
+                  if replaced != 1:
+                      raise SystemExit(f"Expected one legacy {key} config section in {config_path}, found {replaced}")
 
               for key, block in new_check_defaults.items():
                   if re.search(rf"(?m)^{re.escape(key)}:", config_text):
