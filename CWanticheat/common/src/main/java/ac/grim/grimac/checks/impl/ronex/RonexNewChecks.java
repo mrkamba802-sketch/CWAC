@@ -138,7 +138,7 @@ public final class RonexNewChecks {
                     config.getIntElse(getConfigName() + ".maximum-interval-ms", 160)) * 1_000_000L;
             maximumCoefficientOfVariation = Math.max(0.005,
                     Math.min(0.08, config.getDoubleElse(getConfigName() + ".maximum-cv", 0.025)));
-            intervals.clear();
+            if (intervals != null) intervals.clear();
             lastSwingAt = 0L;
             regularWindows = 0;
         }
@@ -228,7 +228,7 @@ public final class RonexNewChecks {
             cycleWindowNanos = Math.max(1500L,
                     config.getIntElse(getConfigName() + ".cycle-window-ms", 5000)) * 1_000_000L;
             requiredCycles = Math.max(2, config.getIntElse(getConfigName() + ".required-cycles", 3));
-            cycles.clear();
+            if (cycles != null) cycles.clear();
             resetCycle();
         }
     }
@@ -284,7 +284,7 @@ public final class RonexNewChecks {
                     config.getIntElse(getConfigName() + ".maximum-packets", 34));
             requiredWindows = Math.max(2,
                     config.getIntElse(getConfigName() + ".required-windows", 3));
-            movementPackets.clear();
+            if (movementPackets != null) movementPackets.clear();
             evidence = 0;
             lastEvaluationAt = 0L;
         }
@@ -406,8 +406,8 @@ public final class RonexNewChecks {
                     config.getIntElse(getConfigName() + ".window", 6));
             requiredEvidence = Math.max(2,
                     config.getIntElse(getConfigName() + ".required-evidence", 3));
-            pendingPlaces.clear();
-            evidenceWindow.clear();
+            if (pendingPlaces != null) pendingPlaces.clear();
+            if (evidenceWindow != null) evidenceWindow.clear();
             downSnapAt = lastReturnedSnapAt = lastSwingAt = lastSwingConsumedAt = 0L;
         }
 
@@ -530,8 +530,8 @@ public final class RonexNewChecks {
                     config.getIntElse(getConfigName() + ".required-hits", 3));
             window = Math.max(requiredHits,
                     config.getIntElse(getConfigName() + ".window", 6));
-            attackWindow.clear();
-            rotationMagnitudes.clear();
+            if (attackWindow != null) attackWindow.clear();
+            if (rotationMagnitudes != null) rotationMagnitudes.clear();
             lastRotationAt = 0L;
             lastRotationDelta = lastAngularAcceleration = lastAngularJerk = 0.0;
             previousRotationSpeed = previousAcceleration = 0.0;
@@ -600,8 +600,8 @@ public final class RonexNewChecks {
                     config.getIntElse(getConfigName() + ".attack-window", 6));
             requiredAttacks = Math.max(2,
                     config.getIntElse(getConfigName() + ".required-attacks", 3));
-            gridSamples.clear();
-            attackWindow.clear();
+            if (gridSamples != null) gridSamples.clear();
+            if (attackWindow != null) attackWindow.clear();
         }
     }
 
@@ -699,7 +699,7 @@ public final class RonexNewChecks {
 
         private void resetTarget() {
             targetId = -1;
-            targetWindow.clear();
+            if (targetWindow != null) targetWindow.clear();
         }
 
         @Override
@@ -812,7 +812,7 @@ public final class RonexNewChecks {
                     config.getIntElse(getConfigName() + ".required-evidence", 3));
             maximumDistance = Math.max(3.0,
                     config.getDoubleElse(getConfigName() + ".maximum-distance", 5.5));
-            attackWindow.clear();
+            if (attackWindow != null) attackWindow.clear();
             lastSprintStopAt = 0L;
             swingReady = player.getClientVersion().isNewerThan(ClientVersion.V_1_8);
         }
