@@ -156,8 +156,8 @@ jobs:
           config_manager = root / "common/src/main/java/ac/grim/grimac/manager/config/ConfigManagerFileImpl.java"
           replace_once(config_manager, "import java.util.regex.Pattern;",
               "import java.util.regex.Matcher;\nimport java.util.regex.Pattern;")
-          replace_once(config_manager, "            ensureLightningCombatPunishments();",
-              "            ensureLightningCombatPunishments();\n            ensureCustomCheckPunishmentGroups();")
+          replace_once(config_manager, "        ensureLightningCombatPunishments();",
+              "        ensureLightningCombatPunishments();\n        ensureCustomCheckPunishmentGroups();")
 
           config_manager_helpers = r"""
               private void ensureCustomCheckPunishmentGroups() {
