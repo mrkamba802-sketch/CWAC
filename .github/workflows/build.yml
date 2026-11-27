@@ -134,7 +134,7 @@ jobs:
           replace_once(manager, ".put(RotationPlace.class, new RotationPlace(player))",
               ".put(RotationPlace.class, new RotationPlace(player))\n                .put(ScaffoldA.class, new ScaffoldA(player))")
           replace_once(manager, ".put(InventoryG.class, new InventoryG(player))",
-              ".put(InventoryG.class, new InventoryG(player))\n                .put(AutoSwapA.class, new AutoSwapA(player))\n                .put(GhostHandA.class, new GhostHandA(player))")
+              ".put(InventoryG.class, new InventoryG(player))\n                .put(AutoSwapA.class, new AutoSwapA(player))\n                .put(AutoSwapC.class, new AutoSwapC(player))\n                .put(GhostHandA.class, new GhostHandA(player))")
 
           tick_manager = root / "common/src/main/java/ac/grim/grimac/manager/TickManager.java"
           replace_once(tick_manager, "import ac.grim.grimac.manager.tick.impl.ResetTick;",
@@ -242,6 +242,7 @@ jobs:
               "HighJumpA": "HighJumpA:\n    vertical-excess-threshold: 0.12",
               "ScaffoldA": "ScaffoldA:\n    evidence-to-flag: 5",
               "AutoSwapA": "AutoSwapA:\n    cycle-window-ms: 350",
+              "AutoSwap": "AutoSwap:\n    c:\n        debug: false",
               "GhostHandA": "GhostHandA:\n    evidence-to-cancel: 2",
               "AimB": "AimB:\n    snap-threshold: 35.0\n    gcd-tolerance: 0.02",
               "KillAuraA": "KillAuraA:\n    maximum-attack-gap-ms: 80\n    burst-window-ms: 5000\n    required-bursts: 3",

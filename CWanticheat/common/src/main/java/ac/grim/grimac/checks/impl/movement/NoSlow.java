@@ -11,11 +11,12 @@ import org.jetbrains.annotations.NotNull;
 
 @CheckData(name = "NoSlow", stableKey = "grim.movement.noslow", description = "Was not slowed while using an item", setback = 5)
 public class NoSlow extends Check implements PostPredictionListener {
-    // Legacy clients can change slots one tick after starting or stopping item use.
+    // The player sends that they switched items the next tick if they switch from an item that can be used
+    // to another item that can be used.  What the fuck Mojang.  Affects 1.8 (and most likely 1.7) clients.
     public boolean didSlotChangeLastTick = false;
-    public boolean flaggedLastTick = false;
     private double offsetToFlag;
     private double bestOffset = 1;
+    private double buffer;
 
     public NoSlow(GrimPlayer player) {
         super(player);
@@ -28,22 +29,25 @@ public class NoSlow extends Check implements PostPredictionListener {
         if (player.packetStateData.isSlowedByUsingItem()) {
             if (player.getClientVersion().isOlderThanOrEquals(ClientVersion.V_1_8) && didSlotChangeLastTick) {
                 didSlotChangeLastTick = false;
-                flaggedLastTick = false;
+                buffer = 0;
             }
 
-            // Require two consecutive prediction failures, but use a much smaller
-            // residual threshold so a low-speed NoSlow advantage is not ignored.
+            if (player.stuckSpeedMultiplier.getX() < 0.99) {
+                bestOffset = 1;
+                return;
+            }
+
             if (bestOffset > offsetToFlag) {
-                if (flaggedLastTick) {
-                    flagWithSetback();
+                buffer += bestOffset;
+                if (buffer > 0.15) {
+                    flagAndAlertWithSetback();
                 }
-                flaggedLastTick = true;
             } else {
+                buffer = Math.max(0, buffer - 0.001);
                 reward();
-                flaggedLastTick = false;
             }
         } else {
-            flaggedLastTick = false;
+            buffer = 0;
         }
         bestOffset = 1;
     }
@@ -54,6 +58,6 @@ public class NoSlow extends Check implements PostPredictionListener {
 
     @Override
     public void onReload(@NotNull ConfigManager config) {
-        offsetToFlag = config.getDoubleElse(getConfigName() + ".threshold", 0.0001);
+        offsetToFlag = config.getDoubleElse(getConfigName() + ".threshold", 0.001);
     }
 }

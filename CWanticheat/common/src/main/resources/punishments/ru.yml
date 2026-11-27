@@ -295,6 +295,15 @@ Punishments:
       - "10:10 [log]"
       - "20:20 [webhook]"
       - "20:20 [proxy]"
+  AutoSwapC:
+    remove-violations-after: 300
+    checks:
+      - "AutoSwapC"
+    commands:
+      - "10:10 [alert]"
+      - "10:10 [log]"
+      - "20:20 [webhook]"
+      - "20:20 [proxy]"
   GhostHandA:
     remove-violations-after: 300
     checks:
