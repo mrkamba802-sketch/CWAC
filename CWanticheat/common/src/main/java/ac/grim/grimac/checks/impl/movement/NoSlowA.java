@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 public class NoSlowA extends Check implements PostPredictionListener {
     private static final Verbose V = Verbose.of("bestOffset={f64}, threshold={f64}, streak={uint}");
     private double bestOffset = Double.POSITIVE_INFINITY;
-    private double threshold = 0.0005;
+    private double threshold = 0.0001;
     private int suspiciousTicks;
     private boolean sawCandidate;
 
@@ -42,7 +42,7 @@ public class NoSlowA extends Check implements PostPredictionListener {
 
         if (sawCandidate && bestOffset > threshold) {
             suspiciousTicks++;
-            if (suspiciousTicks >= 3) {
+            if (suspiciousTicks >= 2) {
                 flagWithSetback(V.write(verbose()).f64(bestOffset).f64(threshold).uint(suspiciousTicks));
                 suspiciousTicks = 0;
             }
@@ -60,6 +60,6 @@ public class NoSlowA extends Check implements PostPredictionListener {
 
     @Override
     public void onReload(@NotNull ConfigManager config) {
-        threshold = config.getDoubleElse(getConfigName() + ".threshold", 0.0005);
+        threshold = config.getDoubleElse(getConfigName() + ".threshold", 0.0001);
     }
 }
