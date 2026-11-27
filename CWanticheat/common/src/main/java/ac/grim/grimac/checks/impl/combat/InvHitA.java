@@ -15,8 +15,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 @CheckData(name = "InvHitA", stableKey = "ronexgrim.inventory.attack_with_menu_open",
-        description = "Detects repeated attacks on living entities while an inventory menu is open",
-        experimental = true)
+        description = "Detects repeated attacks on living entities while an inventory menu is open")
 public class InvHitA extends Check implements PacketReceiveListener {
     private final Deque<Long> attacks = new ArrayDeque<>();
     private long windowNanos, graceNanos;
