@@ -27,7 +27,7 @@ public class AirStuck extends Check implements PostPredictionListener {
                 || player.packetStateData.lastPacketWasTeleport
                 || player.inVehicle() || player.isFlying || player.isGliding
                 || player.wasTouchingWater || player.wasTouchingLava || player.isClimbing
-                || player.isSlowMovement || player.onGround || player.fallDistance < 1.5
+                || player.isSlowMovement || player.onGround
                 || player.uncertaintyHandler.wasAffectedByStuckSpeed()) {
             stagnantTicks = 0;
             return;
@@ -36,7 +36,7 @@ public class AirStuck extends Check implements PostPredictionListener {
         double predictedY = player.predictedVelocity.vector.getY();
         double actualY = player.actualMovement.getY();
         boolean stoppedInAir = predictedY < -0.12
-                && Math.abs(actualY) < 1.0E-5
+                && Math.abs(actualY) < 0.01
                 && predictionComplete.getOffset() > offsetThreshold;
 
         if (stoppedInAir) {
