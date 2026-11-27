@@ -428,13 +428,16 @@ public final class RonexNewChecks {
     }
 
     @CheckData(name = "AimC", stableKey = "cwanticheat.aim.attack_snap",
-            description = "Repeated attack-timed snap turns that settle directly onto a target", experimental = true)
+            description = "Tracks rotation acceleration, smooth turn paths and attack-timed snaps", experimental = true)
     public static class AimC extends AimHitCheck implements PacketReceiveListener {
         private final Deque<Boolean> attackWindow = new ArrayDeque<>();
+        private final Deque<Double> rotationMagnitudes = new ArrayDeque<>();
         private double minimumSnapDegrees, maximumAimError;
+        private double minimumAcceleration, minimumJerk, maximumSmoothCv;
         private int requiredHits, window;
         private long lastRotationAt;
-        private double lastRotationDelta;
+        private double lastRotationDelta, lastAngularAcceleration, lastAngularJerk;
+        private double previousRotationSpeed, previousAcceleration;
 
         public AimC(GrimPlayer player) {
             super(player);
@@ -443,8 +446,21 @@ public final class RonexNewChecks {
         @Override
         public void process(RotationUpdate update) {
             super.process(update);
-            lastRotationDelta = Math.hypot(update.deltaYaw(), update.deltaPitch());
+            double yawDelta = wrapDegrees(update.deltaYaw());
+            double pitchDelta = update.deltaPitch();
+            double currentSpeed = Math.hypot(yawDelta, pitchDelta);
+            if (currentSpeed < 0.05) return;
+
+            double acceleration = currentSpeed - previousRotationSpeed;
+            lastAngularAcceleration = Math.abs(acceleration);
+            lastAngularJerk = Math.abs(acceleration - previousAcceleration);
+            previousRotationSpeed = currentSpeed;
+            previousAcceleration = acceleration;
+            lastRotationDelta = currentSpeed;
             lastRotationAt = System.nanoTime();
+
+            rotationMagnitudes.addLast(currentSpeed);
+            while (rotationMagnitudes.size() > 8) rotationMagnitudes.removeFirst();
         }
 
         @Override
@@ -453,12 +469,23 @@ public final class RonexNewChecks {
             double error = getAimError(event);
             if (!Double.isFinite(error)) return;
             long now = System.nanoTime();
-            boolean suspicious = lastRotationAt != 0L && now - lastRotationAt <= 180_000_000L
-                    && lastRotationDelta >= minimumSnapDegrees && error <= maximumAimError;
+            boolean recentRotation = lastRotationAt != 0L && now - lastRotationAt <= 180_000_000L;
+            boolean snap = lastRotationDelta >= minimumSnapDegrees;
+            boolean accelerationBurst = lastAngularAcceleration >= minimumAcceleration;
+            boolean sharpJerk = lastAngularJerk >= minimumJerk;
+            double smoothCv = smoothnessCoefficient();
+            boolean smoothPath = rotationMagnitudes.size() >= 6
+                    && smoothCv <= maximumSmoothCv;
+            boolean suspicious = recentRotation && error <= maximumAimError
+                    && (snap || accelerationBurst || sharpJerk || smoothPath);
+
             addWindowSample(attackWindow, suspicious, window);
             if (attackWindow.size() == window && countTrue(attackWindow) >= requiredHits) {
-                flag("attack-snap-hits=" + countTrue(attackWindow) + "/" + window
-                        + " rotation-delta=" + formatOffset(lastRotationDelta)
+                flag("aim-motion-hits=" + countTrue(attackWindow) + "/" + window
+                        + " delta=" + formatOffset(lastRotationDelta)
+                        + " acceleration=" + formatOffset(lastAngularAcceleration)
+                        + " jerk=" + formatOffset(lastAngularJerk)
+                        + " smooth-cv=" + formatOffset(smoothCv)
                         + " aim-error=" + formatOffset(error));
                 attackWindow.clear();
             } else if (!suspicious) {
@@ -466,10 +493,37 @@ public final class RonexNewChecks {
             }
         }
 
+        private double smoothnessCoefficient() {
+            if (rotationMagnitudes.size() < 2) return Double.POSITIVE_INFINITY;
+            double mean = 0.0;
+            for (double value : rotationMagnitudes) mean += value;
+            mean /= rotationMagnitudes.size();
+            if (mean < 0.25) return Double.POSITIVE_INFINITY;
+            double variance = 0.0;
+            for (double value : rotationMagnitudes) {
+                double difference = value - mean;
+                variance += difference * difference;
+            }
+            return Math.sqrt(variance / rotationMagnitudes.size()) / mean;
+        }
+
+        private static double wrapDegrees(double value) {
+            value %= 360.0;
+            if (value >= 180.0) value -= 360.0;
+            if (value < -180.0) value += 360.0;
+            return value;
+        }
+
         @Override
         public void onReload(@NotNull ConfigManager config) {
             minimumSnapDegrees = Math.max(8.0,
                     config.getDoubleElse(getConfigName() + ".minimum-snap-degrees", 13.0));
+            minimumAcceleration = Math.max(2.0,
+                    config.getDoubleElse(getConfigName() + ".minimum-acceleration", 8.0));
+            minimumJerk = Math.max(3.0,
+                    config.getDoubleElse(getConfigName() + ".minimum-jerk", 12.0));
+            maximumSmoothCv = Math.max(0.03,
+                    Math.min(0.35, config.getDoubleElse(getConfigName() + ".maximum-smooth-cv", 0.18)));
             maximumAimError = Math.max(0.25,
                     config.getDoubleElse(getConfigName() + ".maximum-aim-error", 1.3));
             requiredHits = Math.max(2,
@@ -477,8 +531,10 @@ public final class RonexNewChecks {
             window = Math.max(requiredHits,
                     config.getIntElse(getConfigName() + ".window", 6));
             attackWindow.clear();
+            rotationMagnitudes.clear();
             lastRotationAt = 0L;
-            lastRotationDelta = 0.0;
+            lastRotationDelta = lastAngularAcceleration = lastAngularJerk = 0.0;
+            previousRotationSpeed = previousAcceleration = 0.0;
         }
     }
 
