@@ -257,7 +257,7 @@ jobs:
               "AirStuck": "AirStuck:\n    threshold: 0.03",
               "AirStuckA": "AirStuckA:\n    packet-silence-ticks: 12\n    vertical-offset-threshold: 0.005\n    action-suppression-ticks: 18",
               "HighJumpA": "HighJumpA:\n    vertical-excess-threshold: 0.12",
-              "ScaffoldA": "ScaffoldA:\n    evidence-to-flag: 5",
+              "ScaffoldA": "ScaffoldA:\n    evidence-to-flag: 6",
               "AutoSwapA": "AutoSwapA:\n    cycle-window-ms: 350",
               "AutoSwap": "AutoSwap:\n    c:\n        debug: false",
               "GhostHandA": "GhostHandA:\n    evidence-to-cancel: 2",
@@ -282,6 +282,15 @@ jobs:
               "InvHitA": "InvHitA:\n    window-ms: 1200\n    open-grace-ms: 180\n    required-attacks: 2",
               "ElytraAimA": "ElytraAimA:\n    minimum-snap-degrees: 13.0\n    maximum-aim-error: 1.2\n    required-hits: 3\n    hit-window: 6",
               "ElytraAimB": "ElytraAimB:\n    minimum-target-movement: 0.10\n    maximum-spatial-error: 0.16\n    required-hits: 4\n    hit-window: 7",
+              "AimA": "AimA:\n    minimum-samples: 10\n    maximum-cv: 0.16\n    minimum-direction-consistency: 0.95\n    maximum-aim-error: 1.4\n    attack-window: 6\n    required-attacks: 3",
+              "AimC": "AimC:\n    minimum-snap-degrees: 13.0\n    maximum-aim-error: 1.3\n    required-hits: 3\n    window: 6",
+              "AimD": "AimD:\n    grid-tolerance: 0.14\n    maximum-aim-error: 2.0\n    grid-window: 12\n    minimum-off-grid-samples: 9\n    attack-window: 6\n    required-attacks: 3",
+              "AimE": "AimE:\n    minimum-target-movement: 0.12\n    maximum-spatial-error: 0.08\n    required-hits: 5\n    window: 7",
+              "ScaffoldD": "ScaffoldD:\n    minimum-down-snap: 24.0\n    minimum-return-snap: 18.0\n    window: 6\n    required-evidence: 3",
+              "AutoClickerA": "AutoClickerA:\n    sample-count: 16\n    required-windows: 3\n    minimum-interval-ms: 35\n    maximum-interval-ms: 160\n    maximum-cv: 0.025",
+              "MaceSwapA": "MaceSwapA:\n    maximum-cycle-ms: 700\n    maximum-attack-delay-ms: 350\n    cycle-window-ms: 5000\n    required-cycles: 3",
+              "MorePacketsA": "MorePacketsA:\n    window-ms: 1000\n    maximum-packets: 34\n    required-windows: 3",
+              "AuraA": "AuraA:\n    window: 7\n    required-evidence: 3\n    maximum-distance: 5.5",
           }
           for lang in ("en", "ru"):
               config_path = root / "common/src/main/resources/config" / f"{lang}.yml"
@@ -300,7 +309,7 @@ jobs:
 
               # Replace existing sections by top-level YAML section boundaries; append them when absent.
               config_lines = config_text.splitlines()
-              for key in ("KillAuraA", "KillAuraB", "KillAuraC"):
+              for key in ("KillAuraA", "KillAuraB", "KillAuraC", "AimA", "AimC", "AimD", "AimE", "ScaffoldA", "ScaffoldD", "AutoClickerA", "MaceSwapA", "MorePacketsA", "AuraA"):
                   starts = [i for i, line in enumerate(config_lines) if line == key + ":"]
                   if len(starts) > 1:
                       raise SystemExit(f"Found duplicate {key} config sections in {config_path}")
@@ -396,6 +405,15 @@ jobs:
             ac/grim/grimac/checks/impl/combat/InvHitA.class \
             ac/grim/grimac/checks/impl/aim/ElytraAimA.class \
             ac/grim/grimac/checks/impl/aim/ElytraAimB.class \
+            ac/grim/grimac/checks/impl/aim/AimA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AutoClickerA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$MaceSwapA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$MorePacketsA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$ScaffoldD.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AimC.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AimD.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AimE.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AuraA.class \
             ac/grim/grimac/manager/tick/impl/AirStuckWatchdog.class; do
             if ! grep -q "^$class$" "$RUNNER_TEMP/plugin-entries.txt"; then
               echo "::error::Missing new check class in the plugin: $class"
