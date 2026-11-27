@@ -114,6 +114,11 @@ jobs:
           replace_once(manager, ".put(NoSlow.class, new NoSlow(player))",
               ".put(NoSlow.class, new NoSlow(player))\n                .put(NoSlowA.class, new NoSlowA(player))\n                .put(NoWebA.class, new NoWebA(player))\n                .put(NoWebB.class, new NoWebB(player))\n                .put(AirStuck.class, new AirStuck(player))")
 
+          ground_spoof = root / "common/src/main/java/ac/grim/grimac/checks/impl/prediction/GroundSpoof.java"
+          replace_once(ground_spoof,
+              "        boolean claimed = player.clientClaimsLastOnGround;\n        if (claimed != player.onGround) {",
+              "        boolean claimed = player.clientClaimsLastOnGround;\n        boolean sustainedNoFall = claimed && !player.onGround && player.fallDistance > 2.0 && player.actualMovement.getY() < -0.05;\n        if (claimed != player.onGround && !sustainedNoFall) {")
+
           engine = root / "common/src/main/java/ac/grim/grimac/predictionengine/predictions/PredictionEngine.java"
           replace_once(engine, "package ac.grim.grimac.predictionengine.predictions;\n",
               "package ac.grim.grimac.predictionengine.predictions;\n\nimport ac.grim.grimac.checks.impl.movement.NoSlowA;\nimport ac.grim.grimac.checks.impl.movement.NoWebA;\nimport ac.grim.grimac.checks.impl.movement.NoWebB;\n")
