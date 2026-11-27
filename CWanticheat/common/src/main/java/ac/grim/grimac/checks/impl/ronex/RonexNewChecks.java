@@ -299,10 +299,12 @@ public final class RonexNewChecks {
         private final Deque<Boolean> evidenceWindow = new ArrayDeque<>();
         private double minimumDownSnap, minimumReturnSnap;
         private int requiredEvidence, evidenceWindowSize;
-        private long downSnapAt, lastReturnedSnapAt, lastSwingAt;
+        private long downSnapAt, lastReturnedSnapAt, lastSwingAt, lastSwingConsumedAt;
+        private final boolean legacySwingBeforePlace;
 
         public ScaffoldD(GrimPlayer player) {
             super(player);
+            legacySwingBeforePlace = player.getClientVersion().isOlderThanOrEquals(ClientVersion.V_1_8);
         }
 
         @Override
@@ -338,8 +340,11 @@ public final class RonexNewChecks {
             long now = System.nanoTime();
             if (isSwing(event)) {
                 lastSwingAt = now;
-                for (PendingPlace pending : pendingPlaces) {
-                    if (now - pending.placedAt <= SWING_WINDOW_NANOS) pending.hasSwing = true;
+                if (!legacySwingBeforePlace) {
+                    for (PendingPlace pending : pendingPlaces) {
+                        long delay = now - pending.placedAt;
+                        if (delay >= 0L && delay <= SWING_WINDOW_NANOS) pending.hasSwing = true;
+                    }
                 }
             }
             finalizeExpiredPlaces(now);
@@ -365,8 +370,11 @@ public final class RonexNewChecks {
                     && now - lastReturnedSnapAt <= SNAP_WINDOW_NANOS;
             if (!recentDownSnap && !recentReturn) return;
 
-            PendingPlace pending = new PendingPlace(now, true, recentReturn,
-                    lastSwingAt != 0L && now - lastSwingAt <= SWING_WINDOW_NANOS);
+            boolean swingBeforePlace = legacySwingBeforePlace && lastSwingAt != 0L
+                    && now >= lastSwingAt && now - lastSwingAt <= SWING_WINDOW_NANOS
+                    && lastSwingAt > lastSwingConsumedAt;
+            if (swingBeforePlace) lastSwingConsumedAt = lastSwingAt;
+            PendingPlace pending = new PendingPlace(now, true, recentReturn, swingBeforePlace);
             pendingPlaces.addLast(pending);
             finalizeExpiredPlaces(now);
         }
@@ -400,7 +408,7 @@ public final class RonexNewChecks {
                     config.getIntElse(getConfigName() + ".required-evidence", 3));
             pendingPlaces.clear();
             evidenceWindow.clear();
-            downSnapAt = lastReturnedSnapAt = lastSwingAt = 0L;
+            downSnapAt = lastReturnedSnapAt = lastSwingAt = lastSwingConsumedAt = 0L;
         }
 
         private static final class PendingPlace {
