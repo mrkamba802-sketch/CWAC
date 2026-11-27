@@ -164,11 +164,6 @@ jobs:
               raise SystemExit("Expected one AntiKB annotation in KnockbackHandler")
           knockback.write_text(knockback_text.replace(old_annotation, new_annotation, 1), encoding="utf-8")
 
-          no_slow = root / "common/src/main/java/ac/grim/grimac/checks/impl/movement/NoSlow.java"
-          replace_once(no_slow,
-              'config.getDoubleElse(getConfigName() + ".threshold", 0.001)',
-              'config.getDoubleElse(getConfigName() + ".threshold", 0.0001)')
-
           no_slow_a = root / "common/src/main/java/ac/grim/grimac/checks/impl/movement/NoSlowA.java"
           no_slow_a_text = no_slow_a.read_text(encoding="utf-8")
           no_slow_a_text = no_slow_a_text.replace("0.0005", "0.0001")
