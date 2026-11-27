@@ -12,7 +12,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import org.jetbrains.annotations.NotNull;
 
-@CheckData(name = "AimA", stableKey = "cwanticheat.aim.smooth_rotation",
+@CheckData(name = "AimA", stableKey = "grim.aim.yaw_pitch_delta",
         description = "Repeated accurate attacks following unusually uniform, low-jerk rotation paths", decay = 0.02)
 public class AimA extends AimHitCheck implements PacketReceiveListener {
     private final Deque<RotationSample> rotations = new ArrayDeque<>();
