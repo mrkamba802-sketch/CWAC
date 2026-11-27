@@ -122,8 +122,8 @@ public class AimA extends AimHitCheck implements PacketReceiveListener {
         attackWindowSize = Math.max(4, config.getIntElse(getConfigName() + ".attack-window", 6));
         requiredAttacks = Math.max(2,
                 config.getIntElse(getConfigName() + ".required-attacks", 3));
-        rotations.clear();
-        attackWindow.clear();
+        if (rotations != null) rotations.clear();
+        if (attackWindow != null) attackWindow.clear();
     }
 
     private record RotationSample(double yaw, double pitch, double magnitude) {}
