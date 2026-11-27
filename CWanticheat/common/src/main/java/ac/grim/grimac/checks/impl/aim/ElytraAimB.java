@@ -13,7 +13,7 @@ import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientAt
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity;
 
 @CheckData(name = "ElytraAimB", stableKey = "ronexgrim.aim.elytra_target_tracking",
-        description = "Repeated near-center attacks against moving targets while gliding", experimental = true)
+        description = "Repeated near-center attacks against moving targets while gliding")
 public class ElytraAimB extends AimHitCheck implements PacketReceiveListener {
     private int targetId = -1;
     private int requiredHits, window;
