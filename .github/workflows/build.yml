@@ -220,22 +220,22 @@ jobs:
               config_text = re.sub(r"(?m)^Simulation:", "Prediction:", config_text, count=1)
 
               # Lower the actual NoSlow threshold, not unrelated thresholds elsewhere in the config.
-              match = re.search(r"(?ms)^NoSlow:\\n(.*?)(?=^[A-Za-z][A-Za-z0-9_-]*:\\n|\\Z)", config_text)
+              match = re.search(r"(?ms)^NoSlow:\n(.*?)(?=^[A-Za-z][A-Za-z0-9_-]*:\n|\Z)", config_text)
               if not match:
                   raise SystemExit(f"NoSlow config section missing in {config_path}")
               no_slow_section = match.group(1)
-              no_slow_section, count = re.subn(r"(?m)^    threshold: 0?\\.?0*1$", "    threshold: 0.0001", no_slow_section, count=1)
+              no_slow_section, count = re.subn(r"(?m)^    threshold: 0?\.?0*1$", "    threshold: 0.0001", no_slow_section, count=1)
               if count != 1:
-                  no_slow_section, count = re.subn(r"(?m)^    threshold: 0\\.001$", "    threshold: 0.0001", no_slow_section, count=1)
+                  no_slow_section, count = re.subn(r"(?m)^    threshold: 0\.001$", "    threshold: 0.0001", no_slow_section, count=1)
               if count != 1:
                   raise SystemExit(f"NoSlow threshold not found in {config_path}")
               config_text = config_text[:match.start(1)] + no_slow_section + config_text[match.end(1):]
 
-              for block in new_check_defaults.strip().split("\\n\\n"):
+              for block in new_check_defaults.strip().split("\n\n"):
                   key = block.split(":", 1)[0]
                   if re.search(rf"(?m)^{re.escape(key)}:", config_text):
                       continue
-                  config_text = config_text.rstrip() + "\\n\\n" + block + "\\n"
+                  config_text = config_text.rstrip() + "\n\n" + block + "\n"
               config_path.write_text(config_text, encoding="utf-8")
 
           # Keep only English and Russian resource locales, with English as fallback for all others.
