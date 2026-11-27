@@ -193,18 +193,18 @@ jobs:
           # Align the packaged default config with the renamed checks and ship parameters for every new check.
           import re
           new_check_defaults = {
-              "NoSlowA": "NoSlowA:\\n    threshold: 0.0001",
-              "NoWebA": "NoWebA:\\n    threshold: 0.0005",
-              "NoWebB": "NoWebB:\\n    threshold: 0.0003",
-              "AirStuck": "AirStuck:\\n    threshold: 0.03",
-              "AirStuckA": "AirStuckA:\\n    packet-silence-ticks: 7\\n    vertical-offset-threshold: 0.015",
-              "HighJumpA": "HighJumpA:\\n    vertical-excess-threshold: 0.12",
-              "ScaffoldA": "ScaffoldA:\\n    evidence-to-flag: 5",
-              "AutoSwapA": "AutoSwapA:\\n    cycle-window-ms: 350",
-              "GhostHandA": "GhostHandA:\\n    evidence-to-cancel: 2",
-              "AimB": "AimB:\\n    snap-threshold: 35.0\\n    gcd-tolerance: 0.02",
-              "KillAuraA": "KillAuraA:\\n    align-threshold: 4.0\\n    snap-threshold: 35.0",
-              "KillAuraB": "KillAuraB:\\n    angle-threshold: 80.0",
+              "NoSlowA": "NoSlowA:\n    threshold: 0.0001",
+              "NoWebA": "NoWebA:\n    threshold: 0.0005",
+              "NoWebB": "NoWebB:\n    threshold: 0.0003",
+              "AirStuck": "AirStuck:\n    threshold: 0.03",
+              "AirStuckA": "AirStuckA:\n    packet-silence-ticks: 7\n    vertical-offset-threshold: 0.015",
+              "HighJumpA": "HighJumpA:\n    vertical-excess-threshold: 0.12",
+              "ScaffoldA": "ScaffoldA:\n    evidence-to-flag: 5",
+              "AutoSwapA": "AutoSwapA:\n    cycle-window-ms: 350",
+              "GhostHandA": "GhostHandA:\n    evidence-to-cancel: 2",
+              "AimB": "AimB:\n    snap-threshold: 35.0\n    gcd-tolerance: 0.02",
+              "KillAuraA": "KillAuraA:\n    align-threshold: 4.0\n    snap-threshold: 35.0",
+              "KillAuraB": "KillAuraB:\n    angle-threshold: 80.0",
           }
           for lang in ("en", "ru"):
               config_path = root / "common/src/main/resources/config" / f"{lang}.yml"
@@ -212,11 +212,11 @@ jobs:
               config_text = re.sub(r"(?m)^Simulation:", "Prediction:", config_text, count=1)
 
               # Lower the actual NoSlow threshold, not unrelated thresholds elsewhere in the config.
-              match = re.search(r"(?ms)^NoSlow:\\n(.*?)(?=^[A-Za-z][A-Za-z0-9_-]*:\\n|\\Z)", config_text)
+              match = re.search(r"(?ms)^NoSlow:\n(.*?)(?=^[A-Za-z][A-Za-z0-9_-]*:\n|\Z)", config_text)
               if not match:
                   raise SystemExit(f"NoSlow config section missing in {config_path}")
               no_slow_section = match.group(1)
-              no_slow_section, count = re.subn(r"(?m)^    threshold: 0\\.001$", "    threshold: 0.0001", no_slow_section, count=1)
+              no_slow_section, count = re.subn(r"(?m)^    threshold: 0\.001$", "    threshold: 0.0001", no_slow_section, count=1)
               if count != 1:
                   raise SystemExit(f"NoSlow threshold not found in {config_path}")
               config_text = config_text[:match.start(1)] + no_slow_section + config_text[match.end(1):]
@@ -224,7 +224,7 @@ jobs:
               for key, block in new_check_defaults.items():
                   if re.search(rf"(?m)^{re.escape(key)}:", config_text):
                       continue
-                  config_text = config_text.rstrip() + "\\n\\n" + block + "\\n"
+                  config_text = config_text.rstrip() + "\n\n" + block + "\n"
               config_path.write_text(config_text, encoding="utf-8")
 
           # Keep only English and Russian resource locales, with English as fallback for all others.
