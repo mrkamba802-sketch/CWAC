@@ -168,16 +168,7 @@ public final class RonexNewChecks {
             if (event.getPacketType() == PacketType.Play.Client.HELD_ITEM_CHANGE) {
                 int selectedSlot = new WrapperPlayClientHeldItemChange(event).getSlot();
                 if (selectedSlot < 0 || selectedSlot > 8) return;
-                ItemStack selectedItem = player.inventory.getHeldItem();
-                if (isItem(selectedItem, "mace")) {
-                    if (maceSlot < 0 && selectedSlot != lastObservedSlot) {
-                        originalSlot = lastObservedSlot;
-                        maceSlot = selectedSlot;
-                        maceSelectedAt = now;
-                        attackedWithMace = false;
-                        attackAt = 0L;
-                    }
-                } else if (maceSlot >= 0 && selectedSlot == originalSlot) {
+                if (maceSlot >= 0 && selectedSlot == originalSlot) {
                     long cycle = now - maceSelectedAt;
                     long attackAge = attackedWithMace ? now - attackAt : Long.MAX_VALUE;
                     if (attackedWithMace && cycle <= maximumCycleNanos
@@ -200,6 +191,13 @@ public final class RonexNewChecks {
                     resetCycle();
                 } else if (maceSlot >= 0 && selectedSlot != maceSlot) {
                     resetCycle();
+                } else if (maceSlot < 0 && selectedSlot != lastObservedSlot
+                        && isItem(player.inventory.getHeldItem(), "mace")) {
+                    originalSlot = lastObservedSlot;
+                    maceSlot = selectedSlot;
+                    maceSelectedAt = now;
+                    attackedWithMace = false;
+                    attackAt = 0L;
                 }
                 lastObservedSlot = selectedSlot;
                 return;
@@ -708,9 +706,9 @@ public final class RonexNewChecks {
             boolean invalidSwingOrder = !swingReady;
             boolean sprintResetMissing = player.isSprinting
                     && (lastSprintStopAt == 0L || now - lastSprintStopAt > 250_000_000L);
-            boolean suspicious = shieldUse || (!rayHit && blocked)
-                    || (invalidSwingOrder && (!rayHit || blocked))
-                    || (sprintResetMissing && !rayHit && blocked);
+            boolean suspicious = shieldUse || blocked
+                    || (invalidSwingOrder && !rayHit)
+                    || (sprintResetMissing && !rayHit);
             addWindowSample(attackWindow, suspicious, window);
             swingReady = false;
 
