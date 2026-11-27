@@ -703,7 +703,7 @@ public final class RonexNewChecks {
             double upperY = box.minY + (box.maxY - box.minY) * 0.72;
             boolean blocked = occluded(centerX, centerY, centerZ)
                     && occluded(centerX, upperY, centerZ);
-            boolean shieldUse = player.packetStateData.slowedByUsingItem
+            boolean shieldUse = player.packetStateData.isSlowedByUsingItem()
                     && isItem(player.inventory.getItemInHand(player.packetStateData.itemInUseHand), "shield");
             boolean invalidSwingOrder = !swingReady;
             boolean sprintResetMissing = player.isSprinting
