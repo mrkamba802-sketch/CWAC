@@ -190,15 +190,63 @@ jobs:
               text = text.replace("<bold>%check_name%</bold>", "%check_name%")
               path.write_text(text, encoding="utf-8")
 
+          # Align the packaged default config with the renamed checks and ship parameters for every new check.
+          import re
+          new_check_defaults = """
+          # Prediction residual for the stricter secondary NoSlow detector.
+          NoSlowA:
+              threshold: 0.0001
+
+          # Detect movement packet suppression while vanilla gravity predicts falling.
+          AirStuckA:
+              packet-silence-ticks: 7
+              vertical-offset-threshold: 0.015
+
+          # Detect upward velocity above the vanilla block-assisted jump prediction.
+          HighJumpA:
+              vertical-excess-threshold: 0.12
+
+          # Rapid hotbar swap -> attack -> return window.
+          AutoSwapA:
+              cycle-window-ms: 350
+
+          # Repeated obstructed container interactions before blocking the GUI open.
+          GhostHandA:
+              evidence-to-cancel: 2
+          """
+          for lang in ("en", "ru"):
+              config_path = root / "common/src/main/resources/config" / f"{lang}.yml"
+              config_text = config_path.read_text(encoding="utf-8")
+              config_text = re.sub(r"(?m)^Simulation:", "Prediction:", config_text, count=1)
+
+              # Lower the actual NoSlow threshold, not unrelated thresholds elsewhere in the config.
+              match = re.search(r"(?ms)^NoSlow:\\n(.*?)(?=^[A-Za-z][A-Za-z0-9_-]*:\\n|\\Z)", config_text)
+              if not match:
+                  raise SystemExit(f"NoSlow config section missing in {config_path}")
+              no_slow_section = match.group(1)
+              no_slow_section, count = re.subn(r"(?m)^    threshold: 0?\\.?0*1$", "    threshold: 0.0001", no_slow_section, count=1)
+              if count != 1:
+                  no_slow_section, count = re.subn(r"(?m)^    threshold: 0\\.001$", "    threshold: 0.0001", no_slow_section, count=1)
+              if count != 1:
+                  raise SystemExit(f"NoSlow threshold not found in {config_path}")
+              config_text = config_text[:match.start(1)] + no_slow_section + config_text[match.end(1):]
+
+              for block in new_check_defaults.strip().split("\\n\\n"):
+                  key = block.split(":", 1)[0]
+                  if re.search(rf"(?m)^{re.escape(key)}:", config_text):
+                      continue
+                  config_text = config_text.rstrip() + "\\n\\n" + block + "\\n"
+              config_path.write_text(config_text, encoding="utf-8")
+
           # Keep only English and Russian resource locales, with English as fallback for all others.
-          for folder_name in ("config", "messages", "punishments"):
+          for folder_name in ("config", "messages", "punishments", "database", "discord"):
               folder = root / "common/src/main/resources" / folder_name
               if folder.exists():
                   for locale_file in folder.glob("*.yml"):
                       if locale_file.stem not in ("en", "ru"):
                           locale_file.unlink()
 
-          print("Applied renamed checks, AirStuck watchdog, new checks, strict NoSlow thresholds, unbolded alerts, and ru/en-only locales.")
+          print("Applied renamed checks, AirStuck watchdog, new checks, stricter NoSlow defaults, unbolded alerts, and ru/en-only locales.")
           PY
 
       - name: Build only the Bukkit/Paper plugin
