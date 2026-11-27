@@ -174,6 +174,8 @@ Punishments:
     remove-violations-after: 300
     checks:
       - "ScaffoldA"
+      - "ScaffoldB"
+      - "ScaffoldC"
     commands:
       - "10:5 [alert]"
       - "1:1 [log]"
@@ -368,6 +370,7 @@ Punishments:
     checks:
       - "Baritone"
       - "BaritoneA"
+      - "BaritoneB"
     commands:
       - "10:5 [alert]"
       - "1:1 [log]"
@@ -484,3 +487,85 @@ Punishments:
       - "1:1 [log]"
       - "40:40 [webhook]"
       - "40:40 [proxy]"
+  BlockReach:
+    remove-violations-after: 300
+    checks:
+      - "BlockReach"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  AutoCrystalA:
+    remove-violations-after: 300
+    checks:
+      - "AutoCrystalA"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  CriticalsA:
+    remove-violations-after: 300
+    checks:
+      - "CriticalsA"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  TriggerBotA:
+    remove-violations-after: 300
+    checks:
+      - "TriggerBotA"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  ChestStealerA:
+    remove-violations-after: 300
+    checks:
+      - "ChestStealerA"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  AutoFishA:
+    remove-violations-after: 300
+    checks:
+      - "AutoFishA"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  BadDig:
+    remove-violations-after: 300
+    checks:
+      - "BadDig"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  InvHitA:
+    remove-violations-after: 300
+    checks:
+      - "InvHitA"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  ElytraAim:
+    remove-violations-after: 300
+    checks:
+      - "ElytraAimA"
+      - "ElytraAimB"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"

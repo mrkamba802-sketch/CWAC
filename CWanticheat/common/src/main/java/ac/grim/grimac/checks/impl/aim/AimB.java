@@ -1,7 +1,6 @@
 package ac.grim.grimac.checks.impl.aim;
 
 import ac.grim.grimac.api.config.ConfigManager;
-import ac.grim.grimac.api.storage.verbose.Verbose;
 import ac.grim.grimac.checks.Check;
 import ac.grim.grimac.checks.CheckData;
 import ac.grim.grimac.checks.impl.aim.processor.AimProcessor;
@@ -10,46 +9,70 @@ import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.anticheat.update.RotationUpdate;
 import org.jetbrains.annotations.NotNull;
 
-@CheckData(name = "AimB", stableKey = "grim.aim.gcd_snap", description = "Large rotation snaps do not follow the client's observed mouse GCD", decay = 0.02)
+@CheckData(name = "AimB", stableKey = "grim.aim.gcd_snap",
+        description = "Repeated large rotations contradict a stable mouse movement grid", decay = 0.02,
+        experimental = true)
 public class AimB extends Check implements RotationListener {
-    private static final Verbose V = Verbose.of("deltaYaw={f32}, deltaPitch={f32}, yawDots={f64}, pitchDots={f64}, evidence={uint}");
-    private double snapThreshold = 35.0;
-    private double gridTolerance = 0.02;
+    private double snapThreshold = 50.0;
+    private double gridTolerance = 0.08;
+    private int requiredEvidence = 5;
     private int evidence;
+    private int stableYawSamples;
+    private int stablePitchSamples;
+    private double previousYawMode;
+    private double previousPitchMode;
 
     public AimB(GrimPlayer player) {
         super(player);
     }
 
     @Override
-    public void process(RotationUpdate rotationUpdate) {
-        if (player.packetStateData.lastPacketWasTeleport || player.packetStateData.horseInteractCausedForcedRotation
-                || player.vehicleData.wasVehicleSwitch || player.inVehicle() || !player.cameraEntity.isSelf()) {
-            evidence = 0;
+    public void process(RotationUpdate update) {
+        if (player.packetStateData.lastPacketWasTeleport
+                || player.packetStateData.horseInteractCausedForcedRotation
+                || player.vehicleData.wasVehicleSwitch || player.inVehicle()
+                || !player.cameraEntity.isSelf()) {
+            resetEvidence();
             return;
         }
 
-        double deltaYaw = rotationUpdate.deltaYawABS();
-        double deltaPitch = rotationUpdate.deltaPitchABS();
+        AimProcessor aim = player.checkManager.get(AimProcessor.class);
+        if (aim == null || !validGrid(aim.modeYaw) || !validGrid(aim.modePitch)
+                || !Double.isFinite(aim.deltaDotsYaw) || !Double.isFinite(aim.deltaDotsPitch)) {
+            stableYawSamples = 0;
+            stablePitchSamples = 0;
+            previousYawMode = 0.0;
+            previousPitchMode = 0.0;
+            evidence = Math.max(0, evidence - 1);
+            return;
+        }
+
+        stableYawSamples = updateStability(aim.modeYaw, previousYawMode, stableYawSamples);
+        stablePitchSamples = updateStability(aim.modePitch, previousPitchMode, stablePitchSamples);
+        previousYawMode = aim.modeYaw;
+        previousPitchMode = aim.modePitch;
+
+        if (stableYawSamples < 8 || stablePitchSamples < 8) return;
+
+        double deltaYaw = update.deltaYawABS();
+        double deltaPitch = update.deltaPitchABS();
         if (Math.max(deltaYaw, deltaPitch) < snapThreshold) {
             evidence = Math.max(0, evidence - 1);
             return;
         }
 
-        AimProcessor aim = player.checkManager.get(AimProcessor.class);
-        if (aim.modeYaw <= 0.0001 || aim.modePitch <= 0.0001
-                || !Double.isFinite(aim.deltaDotsYaw) || !Double.isFinite(aim.deltaDotsPitch)) {
-            return;
-        }
+        boolean yawOffGrid = deltaYaw >= snapThreshold
+                && distanceToInteger(aim.deltaDotsYaw) > gridTolerance;
+        boolean pitchOffGrid = deltaPitch >= snapThreshold
+                && distanceToInteger(aim.deltaDotsPitch) > gridTolerance;
 
-        boolean yawOffGrid = deltaYaw > 0.01 && distanceToInteger(aim.deltaDotsYaw) > gridTolerance;
-        boolean pitchOffGrid = deltaPitch > 0.01 && distanceToInteger(aim.deltaDotsPitch) > gridTolerance;
-        if (yawOffGrid || pitchOffGrid) {
+        if (yawOffGrid && pitchOffGrid) {
             evidence++;
-            if (evidence >= 3) {
-                flag(V.write(verbose()).f32(rotationUpdate.deltaYaw()).f32(rotationUpdate.deltaPitch())
-                        .f64(aim.deltaDotsYaw).f64(aim.deltaDotsPitch).uint(evidence));
-                evidence = 0;
+            if (evidence >= requiredEvidence) {
+                flag("large-two-axis-snap-off-grid yawDots=" + formatOffset(aim.deltaDotsYaw)
+                        + " pitchDots=" + formatOffset(aim.deltaDotsPitch)
+                        + " evidence=" + evidence);
+                resetEvidence();
             }
         } else {
             evidence = Math.max(0, evidence - 1);
@@ -57,13 +80,35 @@ public class AimB extends Check implements RotationListener {
         }
     }
 
+    private static boolean validGrid(double value) {
+        return Double.isFinite(value) && value >= 0.0001 && value <= 5.0;
+    }
+
+    private static int updateStability(double current, double previous, int samples) {
+        if (previous <= 0.0) return 1;
+        double tolerance = Math.max(0.006, previous * 0.15);
+        return Math.abs(current - previous) <= tolerance ? Math.min(20, samples + 1) : 1;
+    }
+
     private static double distanceToInteger(double value) {
         return Math.abs(value - Math.rint(value));
     }
 
+    private void resetEvidence() {
+        evidence = 0;
+        stableYawSamples = 0;
+        stablePitchSamples = 0;
+        previousYawMode = 0.0;
+        previousPitchMode = 0.0;
+    }
+
     @Override
     public void onReload(@NotNull ConfigManager config) {
-        snapThreshold = config.getDoubleElse(getConfigName() + ".snap-threshold", 35.0);
-        gridTolerance = config.getDoubleElse(getConfigName() + ".gcd-tolerance", 0.02);
+        snapThreshold = Math.max(45.0, config.getDoubleElse(getConfigName() + ".snap-threshold", 50.0));
+        gridTolerance = Math.max(0.05, Math.min(0.20,
+                config.getDoubleElse(getConfigName() + ".gcd-tolerance", 0.08)));
+        requiredEvidence = Math.max(4,
+                (int) config.getDoubleElse(getConfigName() + ".required-evidence", 5));
+        resetEvidence();
     }
 }
