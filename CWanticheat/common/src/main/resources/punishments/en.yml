@@ -176,6 +176,7 @@ Punishments:
       - "ScaffoldA"
       - "ScaffoldB"
       - "ScaffoldC"
+      - "ScaffoldD"
     commands:
       - "10:5 [alert]"
       - "1:1 [log]"
@@ -454,11 +455,50 @@ Punishments:
     checks:
       - "AimA"
       - "AimB"
+      - "AimC"
+      - "AimD"
+      - "AimE"
       - "AimDuplicateLook"
       - "AimModulo360"
     commands:
       - "20:40 [alert]"
       - "1:1 [log]"
+  AutoClickerA:
+    remove-violations-after: 300
+    checks:
+      - "AutoClickerA"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  MaceSwapA:
+    remove-violations-after: 300
+    checks:
+      - "MaceSwapA"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  MorePacketsA:
+    remove-violations-after: 300
+    checks:
+      - "MorePacketsA"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  AuraA:
+    remove-violations-after: 300
+    checks:
+      - "AuraA"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
   Exploit:
     remove-violations-after: 300
     checks:
