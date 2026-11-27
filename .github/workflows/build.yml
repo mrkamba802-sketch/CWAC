@@ -105,7 +105,8 @@ jobs:
           grep -Eq '^name: CWanticheat$' "$RUNNER_TEMP/plugin.yml"
           grep -Eq '^main: ac\.grim\.grimac\.platform\.bukkit\.GrimACBukkitLoaderPlugin$' "$RUNNER_TEMP/plugin.yml"
 
-          if ! jar tf "$PLUGIN_JAR" | grep -q '^ac/grim/grimac/shaded/packetevents/'; then
+          jar tf "$PLUGIN_JAR" > "$RUNNER_TEMP/plugin-entries.txt"
+          if ! grep -q '^ac/grim/grimac/shaded/packetevents/' "$RUNNER_TEMP/plugin-entries.txt"; then
             echo "::error::PacketEvents classes are missing; refusing to publish a non-standalone plugin."
             exit 1
           fi
