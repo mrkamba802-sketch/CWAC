@@ -12,7 +12,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 @CheckData(name = "TriggerBotA", stableKey = "cwanticheat.combat.triggerbot_a",
-        description = "Repeated attacks immediately after a precise target-directed rotation", experimental = true)
+        description = "Repeated attacks immediately after a precise target-directed rotation")
 public class TriggerBotA extends AimHitCheck implements PacketReceiveListener {
     private final Deque<Long> fastAimAttacks = new ArrayDeque<>();
     private long lastRotationAt, lastAttackAt, reactionWindowNanos, sampleWindowNanos, minimumAttackGapNanos;
