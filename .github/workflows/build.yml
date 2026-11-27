@@ -156,6 +156,25 @@ jobs:
               "        Vector3d position = lastKnownGoodPosition.pos;",
               "        Vector3d position = lastKnownGoodPosition.pos;\n        if (hardMovementSetback) {\n            double nudgeX = Math.abs(player.actualMovement.getX()) > 1.0E-6\n                    ? -Math.signum(player.actualMovement.getX()) * 0.001D : 0.001D;\n            double nudgeZ = Math.abs(player.actualMovement.getZ()) > 1.0E-6\n                    ? -Math.signum(player.actualMovement.getZ()) * 0.001D : 0.0D;\n            position = position.withX(position.getX() + nudgeX).withZ(position.getZ() + nudgeZ);\n        }")
           replace_once(setback,
+              "import java.util.ArrayList;",
+              "import java.util.ArrayDeque;\nimport java.util.ArrayList;")
+          replace_once(setback,
+              "    private long lastWorldResync = 0;",
+              "    private long lastWorldResync = 0;\n    private final ArrayDeque<SetbackPosWithVector> recentValidPositions = new ArrayDeque<>(4);")
+          replace_once(setback,
+              "    public void executeForceResync() {",
+              "    private void rememberValidPosition(Vector3dm velocity) {\n        SetbackPosWithVector valid = new SetbackPosWithVector(\n                new Vector3d(player.x, player.y, player.z), velocity.clone());\n        lastKnownGoodPosition = valid;\n        if (recentValidPositions.size() >= 4) recentValidPositions.removeFirst();\n        recentValidPositions.addLast(valid);\n    }\n\n    public void executeForceResync() {")
+          replace_once(setback,
+              "    public boolean executeViolationSetback() {\n        if (isExempt()) return false;\n        blockMovementsUntilResync(true, false);",
+              "    public boolean executeViolationSetback() {\n        if (isExempt()) return false;\n        if (recentValidPositions.size() >= 4) {\n            SetbackPosWithVector bufferedSafePosition = recentValidPositions.peekFirst();\n            if (bufferedSafePosition != null) {\n                lastKnownGoodPosition = bufferedSafePosition;\n                recentValidPositions.clear();\n                recentValidPositions.addLast(bufferedSafePosition);\n            }\n        }\n        blockMovementsUntilResync(true, false);")
+          setback_text = setback.read_text(encoding="utf-8")
+          old_valid_update = "lastKnownGoodPosition = new SetbackPosWithVector(new Vector3d(player.x, player.y, player.z), afterTickFriction);"
+          if setback_text.count(old_valid_update) != 2:
+              raise SystemExit(f"Expected two last-known-good update sites, found {setback_text.count(old_valid_update)}")
+          setback_text = setback_text.replace(old_valid_update, "rememberValidPosition(afterTickFriction);")
+          setback.write_text(setback_text, encoding="utf-8")
+
+          replace_once(setback,
               "            if (data.getVelocity() != null && data.getVelocity().lengthSquared() > 0) {",
               "            if (data.getVelocity() != null) {")
           replace_once(setback,
