@@ -86,7 +86,7 @@ public class AutoSwapC extends Check implements PacketReceiveListener, PacketSen
                                 + " buffer=" + buffer + " skipping=" + clientWasSkippingTicks);
                     }
 
-                    flagAndAlert("slot=" + pendingSwapSlot);
+                    flag("slot=" + pendingSwapSlot);
                 }
             } else {
                 buffer = Math.max(0, buffer - 0.5);

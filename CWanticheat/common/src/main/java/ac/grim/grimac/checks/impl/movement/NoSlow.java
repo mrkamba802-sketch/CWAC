@@ -40,7 +40,7 @@ public class NoSlow extends Check implements PostPredictionListener {
             if (bestOffset > offsetToFlag) {
                 buffer += bestOffset;
                 if (buffer > 0.15) {
-                    flagAndAlertWithSetback();
+                    flagWithSetback();
                 }
             } else {
                 buffer = Math.max(0, buffer - 0.001);
