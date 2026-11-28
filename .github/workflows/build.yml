@@ -114,23 +114,23 @@ jobs:
 
           manager = root / "common/src/main/java/ac/grim/grimac/manager/CheckManager.java"
           replace_once(manager, "import ac.grim.grimac.checks.impl.aim.AimDuplicateLook;",
-              "import ac.grim.grimac.checks.impl.aim.AimA;\nimport ac.grim.grimac.checks.impl.aim.AimB;\nimport ac.grim.grimac.checks.impl.baritone.BaritoneA;\nimport ac.grim.grimac.checks.impl.aim.AimDuplicateLook;")
+              "import ac.grim.grimac.checks.impl.aim.AimA;\nimport ac.grim.grimac.checks.impl.aim.AimB;\nimport ac.grim.grimac.checks.impl.aim.AimF;\nimport ac.grim.grimac.checks.impl.baritone.BaritoneA;\nimport ac.grim.grimac.checks.impl.aim.AimDuplicateLook;")
           replace_once(manager, "import ac.grim.grimac.checks.impl.aim.AimDuplicateLook;",
-              "import ac.grim.grimac.checks.impl.combat.CriticalsA;\nimport ac.grim.grimac.checks.impl.combat.InvHitA;\nimport ac.grim.grimac.checks.impl.combat.TriggerBotA;\nimport ac.grim.grimac.checks.impl.aim.ElytraAimA;\nimport ac.grim.grimac.checks.impl.aim.ElytraAimB;\nimport ac.grim.grimac.checks.impl.ronex.RonexAdvancedChecks;\nimport ac.grim.grimac.checks.impl.ronex.RonexExtraChecks;\nimport ac.grim.grimac.checks.impl.aim.AimDuplicateLook;")
+              "import ac.grim.grimac.checks.impl.combat.AuraB;\nimport ac.grim.grimac.checks.impl.combat.KillAuraD;\nimport ac.grim.grimac.checks.impl.combat.CriticalsA;\nimport ac.grim.grimac.checks.impl.combat.InvHitA;\nimport ac.grim.grimac.checks.impl.combat.TriggerBotA;\nimport ac.grim.grimac.checks.impl.aim.ElytraAimA;\nimport ac.grim.grimac.checks.impl.aim.ElytraAimB;\nimport ac.grim.grimac.checks.impl.ronex.RonexAdvancedChecks;\nimport ac.grim.grimac.checks.impl.ronex.RonexExtraChecks;\nimport ac.grim.grimac.checks.impl.aim.AimDuplicateLook;")
           replace_once(manager, "import ac.grim.grimac.checks.impl.ronex.RonexExtraChecks;",
               "import ac.grim.grimac.checks.impl.ronex.RonexExtraChecks;\nimport ac.grim.grimac.checks.impl.ronex.RonexNewChecks;")
           replace_once(manager, "import ac.grim.grimac.checks.impl.groundspoof.NoFall;",
               "import ac.grim.grimac.checks.impl.groundspoof.NoFall;\nimport ac.grim.grimac.checks.impl.groundspoof.NoFallA;")
           replace_once(manager, "import ac.grim.grimac.checks.impl.movement.NoSlow;",
-              "import ac.grim.grimac.checks.impl.movement.AirStuck;\nimport ac.grim.grimac.checks.impl.movement.AirStuckA;\nimport ac.grim.grimac.checks.impl.movement.HighJumpA;\nimport ac.grim.grimac.checks.impl.movement.NoSlow;\nimport ac.grim.grimac.checks.impl.movement.StrafeA;\nimport ac.grim.grimac.checks.impl.movement.StrafeB;\nimport ac.grim.grimac.checks.impl.movement.VoidClip;\nimport ac.grim.grimac.checks.impl.movement.NoSlowA;\nimport ac.grim.grimac.checks.impl.movement.NoSlowB;\nimport ac.grim.grimac.checks.impl.movement.NoSlowC;\nimport ac.grim.grimac.checks.impl.movement.NoWebA;\nimport ac.grim.grimac.checks.impl.movement.NoWebB;")
+              "import ac.grim.grimac.checks.impl.movement.AirStuck;\nimport ac.grim.grimac.checks.impl.movement.AirStuckA;\nimport ac.grim.grimac.checks.impl.movement.AirStuckB;\nimport ac.grim.grimac.checks.impl.movement.HighJumpA;\nimport ac.grim.grimac.checks.impl.movement.NoSlow;\nimport ac.grim.grimac.checks.impl.movement.StrafeA;\nimport ac.grim.grimac.checks.impl.movement.StrafeB;\nimport ac.grim.grimac.checks.impl.movement.VoidClip;\nimport ac.grim.grimac.checks.impl.movement.NoSlowA;\nimport ac.grim.grimac.checks.impl.movement.NoSlowB;\nimport ac.grim.grimac.checks.impl.movement.NoSlowC;\nimport ac.grim.grimac.checks.impl.movement.NoWebA;\nimport ac.grim.grimac.checks.impl.movement.NoWebB;")
           replace_once(manager, ".put(Reach.class, new Reach(player))",
               ".put(Reach.class, new Reach(player))\n                .put(KillAuraA.class, new KillAuraA(player))\n                .put(KillAuraB.class, new KillAuraB(player))\n                .put(KillAuraC.class, new KillAuraC(player))")
           replace_once(manager, ".put(NoFall.class, new NoFall(player))",
               ".put(NoFall.class, new NoFall(player))\n                .put(NoFallA.class, new NoFallA(player))")
           replace_once(manager, ".put(AimProcessor.class, new AimProcessor(player))",
-              ".put(AimProcessor.class, new AimProcessor(player))\n                .put(AimA.class, new AimA(player))\n                .put(AimB.class, new AimB(player))\n                .put(RonexNewChecks.AimC.class, new RonexNewChecks.AimC(player))\n                .put(RonexNewChecks.AimD.class, new RonexNewChecks.AimD(player))\n                .put(RonexNewChecks.AimE.class, new RonexNewChecks.AimE(player))\n                .put(BaritoneA.class, new BaritoneA(player))")
+              ".put(AimProcessor.class, new AimProcessor(player))\n                .put(AimA.class, new AimA(player))\n                .put(AimB.class, new AimB(player))\n                .put(RonexNewChecks.AimC.class, new RonexNewChecks.AimC(player))\n                .put(RonexNewChecks.AimD.class, new RonexNewChecks.AimD(player))\n                .put(RonexNewChecks.AimE.class, new RonexNewChecks.AimE(player))\n                .put(AimF.class, new AimF(player))\n                .put(BaritoneA.class, new BaritoneA(player))")
           replace_once(manager, ".put(NoSlow.class, new NoSlow(player))",
-              ".put(NoSlow.class, new NoSlow(player))\n                .put(NoSlowA.class, new NoSlowA(player))\n                .put(NoSlowB.class, new NoSlowB(player))\n                .put(NoSlowC.class, new NoSlowC(player))\n                .put(NoWebA.class, new NoWebA(player))\n                .put(NoWebB.class, new NoWebB(player))\n                .put(AirStuck.class, new AirStuck(player))\n                .put(AirStuckA.class, new AirStuckA(player))\n                .put(HighJumpA.class, new HighJumpA(player))\n                .put(VoidClip.class, new VoidClip(player))\n                .put(StrafeA.class, new StrafeA(player))\n                .put(StrafeB.class, new StrafeB(player))")
+              ".put(NoSlow.class, new NoSlow(player))\n                .put(NoSlowA.class, new NoSlowA(player))\n                .put(NoSlowB.class, new NoSlowB(player))\n                .put(NoSlowC.class, new NoSlowC(player))\n                .put(NoWebA.class, new NoWebA(player))\n                .put(NoWebB.class, new NoWebB(player))\n                .put(AirStuck.class, new AirStuck(player))\n                .put(AirStuckA.class, new AirStuckA(player))\n                .put(AirStuckB.class, new AirStuckB(player))\n                .put(HighJumpA.class, new HighJumpA(player))\n                .put(VoidClip.class, new VoidClip(player))\n                .put(StrafeA.class, new StrafeA(player))\n                .put(StrafeB.class, new StrafeB(player))")
 
           ground_spoof = root / "common/src/main/java/ac/grim/grimac/checks/impl/prediction/GroundSpoof.java"
           replace_once(ground_spoof,
@@ -143,7 +143,7 @@ jobs:
               ".put(InventoryG.class, new InventoryG(player))\n                .put(AutoSwapA.class, new AutoSwapA(player))\n                .put(AutoSwapC.class, new AutoSwapC(player))\n                .put(GhostHandA.class, new GhostHandA(player))")
 
           replace_once(manager, ".put(KillAuraC.class, new KillAuraC(player))",
-              ".put(KillAuraC.class, new KillAuraC(player))\n                .put(CriticalsA.class, new CriticalsA(player))\n                .put(TriggerBotA.class, new TriggerBotA(player))\n                .put(InvHitA.class, new InvHitA(player))\n                .put(RonexExtraChecks.AutoCrystalA.class, new RonexExtraChecks.AutoCrystalA(player))\n                .put(RonexExtraChecks.BlockReach.class, new RonexExtraChecks.BlockReach(player))\n                .put(RonexNewChecks.AutoClickerA.class, new RonexNewChecks.AutoClickerA(player))\n                .put(RonexNewChecks.MaceSwapA.class, new RonexNewChecks.MaceSwapA(player))\n                .put(RonexNewChecks.MorePacketsA.class, new RonexNewChecks.MorePacketsA(player))\n                .put(RonexNewChecks.AuraA.class, new RonexNewChecks.AuraA(player))")
+              ".put(KillAuraC.class, new KillAuraC(player))\n                .put(CriticalsA.class, new CriticalsA(player))\n                .put(TriggerBotA.class, new TriggerBotA(player))\n                .put(InvHitA.class, new InvHitA(player))\n                .put(RonexExtraChecks.AutoCrystalA.class, new RonexExtraChecks.AutoCrystalA(player))\n                .put(RonexExtraChecks.BlockReach.class, new RonexExtraChecks.BlockReach(player))\n                .put(RonexNewChecks.AutoClickerA.class, new RonexNewChecks.AutoClickerA(player))\n                .put(RonexNewChecks.MaceSwapA.class, new RonexNewChecks.MaceSwapA(player))\n                .put(RonexNewChecks.MorePacketsA.class, new RonexNewChecks.MorePacketsA(player))\n                .put(RonexNewChecks.AuraA.class, new RonexNewChecks.AuraA(player))\n                .put(AuraB.class, new AuraB(player))\n                .put(KillAuraD.class, new KillAuraD(player))")
           replace_once(manager, ".put(BaritoneA.class, new BaritoneA(player))",
               ".put(BaritoneA.class, new BaritoneA(player))\n                .put(RonexExtraChecks.BaritoneB.class, new RonexExtraChecks.BaritoneB(player))\n                .put(ElytraAimA.class, new ElytraAimA(player))\n                .put(ElytraAimB.class, new ElytraAimB(player))")
           replace_once(manager, ".put(ScaffoldA.class, new ScaffoldA(player))",
@@ -179,18 +179,18 @@ jobs:
                   if (!hasPunishmentsRoot(configString)) return configString;
 
                   String[][] groups = {
-                          {"Aim", "AimA", "AimB", "AimC", "AimD", "AimE"},
+                          {"Aim", "AimA", "AimB", "AimC", "AimD", "AimE", "AimF"},
                           {"Scaffold", "ScaffoldA", "ScaffoldB", "ScaffoldC", "ScaffoldD"},
                           {"Baritone", "BaritoneA", "BaritoneB"},
                           {"ElytraAim", "ElytraAimA", "ElytraAimB"},
                           {"NoFall", "NoFallA"},
                           {"NoSlow", "NoSlowA", "NoSlowB", "NoSlowC"},
                           {"NoWeb", "NoWebA", "NoWebB"},
-                          {"AirStuck", "AirStuck", "AirStuckA"},
+                          {"AirStuck", "AirStuck", "AirStuckA", "AirStuckB"},
                           {"HighJump", "HighJumpA"},
                           {"VoidClip", "VoidClip"},
                           {"Strafe", "StrafeA", "StrafeB"},
-                          {"KillAura", "KillAuraA", "KillAuraB", "KillAuraC"},
+                          {"KillAura", "KillAuraA", "KillAuraB", "KillAuraC", "KillAuraD"},
                           {"BlockReach", "BlockReach"},
                           {"AutoCrystalA", "AutoCrystalA"},
                           {"CriticalsA", "CriticalsA"},
@@ -205,7 +205,7 @@ jobs:
                           {"AutoClickerA", "AutoClickerA"},
                           {"MaceSwapA", "MaceSwapA"},
                           {"MorePacketsA", "MorePacketsA"},
-                          {"AuraA", "AuraA"}
+                          {"AuraA", "AuraA"},\n                          {"AuraB", "AuraB"}
                   };
 
                   String result = configString;
@@ -370,7 +370,7 @@ jobs:
               "NoWebA": "NoWebA:\n    threshold: 0.0005",
               "NoWebB": "NoWebB:\n    threshold: 0.0003",
               "AirStuck": "AirStuck:\n    threshold: 0.03",
-              "AirStuckA": "AirStuckA:\n    packet-silence-ticks: 12\n    vertical-offset-threshold: 0.005\n    action-suppression-ticks: 18",
+              "AirStuckA": "AirStuckA:\n    packet-silence-ticks: 12\n    vertical-offset-threshold: 0.005\n    action-suppression-ticks: 18",\n              "AirStuckB": "AirStuckB:\n    predicted-y-threshold: 0.10\n    maximum-actual-y: 0.035\n    minimum-offset: 0.0025\n    window: 8\n    required-samples: 6",
               "HighJumpA": "HighJumpA:\n    vertical-excess-threshold: 0.12",
               "ScaffoldA": "ScaffoldA:\n    evidence-to-flag: 6",
               "AutoSwapA": "AutoSwapA:\n    cycle-window-ms: 350",
@@ -379,7 +379,7 @@ jobs:
               "AimB": "AimB:\n    snap-threshold: 50.0\n    gcd-tolerance: 0.08\n    required-evidence: 5",
               "KillAuraA": "KillAuraA:\n    maximum-attack-gap-ms: 80\n    burst-window-ms: 5000\n    required-bursts: 3",
               "KillAuraB": "KillAuraB:\n    minimum-excess-degrees: 10.0\n    maximum-distance: 5.0\n    required-hits: 4\n    hit-window: 8",
-              "KillAuraC": "KillAuraC:\n    maximum-distance: 5.0\n    required-hits: 3\n    hit-window: 6",
+              "KillAuraC": "KillAuraC:\n    maximum-distance: 5.0\n    required-hits: 3\n    hit-window: 6",\n              "KillAuraD": "KillAuraD:\n    minimum-target-angle-degrees: 14.0\n    maximum-observed-turn-degrees: 5.0\n    maximum-distance: 6.0\n    maximum-attack-gap-ms: 250\n    window: 8\n    required-switches: 4",
               "BaritoneA": "BaritoneA:\n    required-evidence: 16\n    max-pitch-step: 1.0",
               "VoidClip": "VoidClip:\n    vertical-error-threshold: 0.35\n    prediction-offset-threshold: 0.15\n    required-streak: 2",
               "StrafeA": "StrafeA:\n    horizontal-excess-threshold: 0.025\n    prediction-offset-threshold: 0.012\n    required-streak: 4",
@@ -400,12 +400,12 @@ jobs:
               "AimA": "AimA:\n    minimum-samples: 10\n    maximum-cv: 0.16\n    minimum-direction-consistency: 0.95\n    maximum-aim-error: 1.4\n    attack-window: 6\n    required-attacks: 3",
               "AimC": "AimC:\n    minimum-snap-degrees: 13.0\n    minimum-acceleration: 8.0\n    minimum-jerk: 12.0\n    maximum-smooth-cv: 0.18\n    maximum-aim-error: 1.3\n    required-hits: 3\n    window: 6",
               "AimD": "AimD:\n    grid-tolerance: 0.14\n    maximum-aim-error: 2.0\n    grid-window: 12\n    minimum-off-grid-samples: 9\n    attack-window: 6\n    required-attacks: 3",
-              "AimE": "AimE:\n    minimum-target-movement: 0.12\n    maximum-spatial-error: 0.08\n    required-hits: 5\n    window: 7",
+              "AimE": "AimE:\n    minimum-target-movement: 0.12\n    maximum-spatial-error: 0.08\n    required-hits: 5\n    window: 7",\n              "AimF": "AimF:\n    minimum-rotation-degrees: 12.0\n    minimum-reaction-ms: 20\n    maximum-reaction-ms: 140\n    maximum-aim-error: 0.9\n    maximum-reaction-cv: 0.20\n    window: 8\n    required-switches: 5",
               "ScaffoldD": "ScaffoldD:\n    minimum-down-snap: 24.0\n    minimum-return-snap: 18.0\n    window: 6\n    required-evidence: 3",
               "AutoClickerA": "AutoClickerA:\n    sample-count: 16\n    required-windows: 3\n    minimum-interval-ms: 35\n    maximum-interval-ms: 160\n    maximum-cv: 0.025",
               "MaceSwapA": "MaceSwapA:\n    maximum-cycle-ms: 700\n    maximum-attack-delay-ms: 350\n    cycle-window-ms: 5000\n    required-cycles: 3",
               "MorePacketsA": "MorePacketsA:\n    window-ms: 1000\n    maximum-packets: 34\n    required-windows: 3",
-              "AuraA": "AuraA:\n    window: 7\n    required-evidence: 3\n    maximum-distance: 5.5",
+              "AuraA": "AuraA:\n    window: 7\n    required-evidence: 3\n    maximum-distance: 5.5",\n              "AuraB": "AuraB:\n    minimum-interval-ms: 75\n    maximum-interval-ms: 500\n    sample-count: 20\n    maximum-cv: 0.012\n    minimum-target-switches: 5\n    required-windows: 3",
           }
           for lang in ("en", "ru"):
               config_path = root / "common/src/main/resources/config" / f"{lang}.yml"
@@ -424,7 +424,7 @@ jobs:
 
               # Replace existing sections by top-level YAML section boundaries; append them when absent.
               config_lines = config_text.splitlines()
-              for key in ("KillAuraA", "KillAuraB", "KillAuraC", "AimA", "AimC", "AimD", "AimE", "ScaffoldA", "ScaffoldD", "AutoClickerA", "MaceSwapA", "MorePacketsA", "AuraA"):
+              for key in ("KillAuraA", "KillAuraB", "KillAuraC", "KillAuraD", "AimA", "AimC", "AimD", "AimE", "AimF", "ScaffoldA", "ScaffoldD", "AirStuckB", "AutoClickerA", "MaceSwapA", "MorePacketsA", "AuraA", "AuraB"):
                   starts = [i for i, line in enumerate(config_lines) if line == key + ":"]
                   if len(starts) > 1:
                       raise SystemExit(f"Found duplicate {key} config sections in {config_path}")
@@ -499,6 +499,7 @@ jobs:
 
           for class in \
             ac/grim/grimac/checks/impl/movement/AirStuckA.class \
+            ac/grim/grimac/checks/impl/movement/AirStuckB.class \
             ac/grim/grimac/checks/impl/movement/HighJumpA.class \
             ac/grim/grimac/checks/impl/inventory/AutoSwapA.class \
             ac/grim/grimac/checks/impl/inventory/GhostHandA.class \
@@ -529,6 +530,9 @@ jobs:
             ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AimD.class \
             ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AimE.class \
             ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AuraA.class \
+            ac/grim/grimac/checks/impl/aim/AimF.class \
+            ac/grim/grimac/checks/impl/combat/AuraB.class \
+            ac/grim/grimac/checks/impl/combat/KillAuraD.class \
             ac/grim/grimac/manager/tick/impl/AirStuckWatchdog.class; do
             if ! grep -q "^$class$" "$RUNNER_TEMP/plugin-entries.txt"; then
               echo "::error::Missing new check class in the plugin: $class"
