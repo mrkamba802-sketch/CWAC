@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-@CheckData(name = "AimF", stableKey = "cwanticheat.aim.fast_target_reacquisition",
+@CheckData(name = "AimF", stableKey = "cwanticheat.aim.fast_target_reacquisition", experimental = false
         description = "Repeated highly accurate target switches shortly after significant rotations")
 public class AimF extends AimHitCheck implements PacketReceiveListener {
     private final Deque<Boolean> switchSamples = new ArrayDeque<>();

@@ -9,7 +9,7 @@ import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.anticheat.update.PredictionComplete;
 import org.jetbrains.annotations.NotNull;
 
-@CheckData(name = "AirStuck", stableKey = "grim.movement.air_stuck", description = "Stopped vertical movement while vanilla prediction requires falling", setback = 8, decay = 0.02)
+@CheckData(name = "AirStuck", stableKey = "grim.movement.air_stuck", experimental = false description = "Stopped vertical movement while vanilla prediction requires falling", setback = 8, decay = 0.02)
 public class AirStuck extends Check implements PostPredictionListener {
     private static final Verbose V = Verbose.of("predictedY={f64}, actualY={f64}, offset={f64}, ticks={uint}");
     private int stagnantTicks;

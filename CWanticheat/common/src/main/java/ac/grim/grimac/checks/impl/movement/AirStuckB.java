@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-@CheckData(name = "AirStuckB", stableKey = "cwanticheat.movement.air_stuck_b",
+@CheckData(name = "AirStuckB", stableKey = "cwanticheat.movement.air_stuck_b", experimental = false
         description = "Repeated near-zero vertical movement across a window while gravity predicts falling",
         setback = 8, decay = 0.02)
 public class AirStuckB extends Check implements PostPredictionListener {

@@ -9,7 +9,7 @@ import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.anticheat.update.RotationUpdate;
 import org.jetbrains.annotations.NotNull;
 
-@CheckData(name = "AimB", stableKey = "grim.aim.gcd_snap",
+@CheckData(name = "AimB", stableKey = "grim.aim.gcd_snap", experimental = false
         description = "Repeated large rotations contradict a stable mouse movement grid", decay = 0.02)
 public class AimB extends Check implements RotationListener {
     private double snapThreshold = 50.0;

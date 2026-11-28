@@ -15,7 +15,7 @@ import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientIn
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerFlying;
 import org.jetbrains.annotations.NotNull;
 
-@CheckData(name = "AirStuckA", stableKey = "grim.movement.air_stuck_a", description = "Detects suspended air movement and suppresses combat and block actions while suspected", setback = 1, decay = 0.01)
+@CheckData(name = "AirStuckA", stableKey = "grim.movement.air_stuck_a", experimental = false description = "Detects suspended air movement and suppresses combat and block actions while suspected", setback = 1, decay = 0.01)
 public class AirStuckA extends Check implements PacketReceiveListener, PostPredictionListener {
     private static final Verbose V = Verbose.of("predictedY={f64}, actualY={f64}, offset={f64}, evidence={uint}");
 
