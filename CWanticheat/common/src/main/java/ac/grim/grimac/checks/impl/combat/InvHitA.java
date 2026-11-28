@@ -14,7 +14,7 @@ import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientIn
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-@CheckData(name = "InvHitA", stableKey = "ronexgrim.inventory.attack_with_menu_open",
+@CheckData(name = "InvHitA", stableKey = "ronexgrim.inventory.attack_with_menu_open", experimental = false
         description = "Detects repeated attacks on living entities while an inventory menu is open")
 public class InvHitA extends Check implements PacketReceiveListener {
     private final Deque<Long> attacks = new ArrayDeque<>();

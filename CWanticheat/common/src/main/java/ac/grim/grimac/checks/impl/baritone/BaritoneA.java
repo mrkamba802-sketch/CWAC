@@ -11,7 +11,7 @@ import ac.grim.grimac.utils.anticheat.update.RotationUpdate;
 import ac.grim.grimac.utils.math.GrimMath;
 import org.jetbrains.annotations.NotNull;
 
-@CheckData(name = "BaritoneA", stableKey = "grim.baritone.baritone_a", description = "Detects repeated path-like micro-pitch corrections while automated movement continues", setback = 3, decay = 0.02)
+@CheckData(name = "BaritoneA", stableKey = "grim.baritone.baritone_a", experimental = false description = "Detects repeated path-like micro-pitch corrections while automated movement continues", setback = 3, decay = 0.02)
 public class BaritoneA extends Check implements RotationListener {
     private static final Verbose V = Verbose.of("pitchStep={f32}, pitchDivisor={f64}, evidence={uint}");
     private int evidence;

@@ -10,7 +10,7 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-@CheckData(name = "ElytraAimA", stableKey = "ronexgrim.aim.elytra_snap",
+@CheckData(name = "ElytraAimA", stableKey = "ronexgrim.aim.elytra_snap", experimental = false
         description = "Repeated attack-timed snap rotations while gliding")
 public class ElytraAimA extends AimHitCheck implements PacketReceiveListener {
     private final Deque<Boolean> hits = new ArrayDeque<>();

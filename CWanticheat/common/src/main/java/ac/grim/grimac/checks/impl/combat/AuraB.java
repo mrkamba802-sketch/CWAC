@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-@CheckData(name = "AuraB", stableKey = "cwanticheat.combat.aura_b",
+@CheckData(name = "AuraB", stableKey = "cwanticheat.combat.aura_b", experimental = false
         description = "Unusually uniform entity-attack timing repeated while switching living targets")
 public class AuraB extends Check implements PacketReceiveListener {
     private final Deque<Long> intervals = new ArrayDeque<>();

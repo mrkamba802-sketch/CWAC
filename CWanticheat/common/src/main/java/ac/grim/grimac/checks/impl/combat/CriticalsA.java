@@ -14,7 +14,7 @@ import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientIn
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-@CheckData(name = "CriticalsA", stableKey = "cwanticheat.combat.criticals_a",
+@CheckData(name = "CriticalsA", stableKey = "cwanticheat.combat.criticals_a", experimental = false
         description = "Repeated attacks while the client claims airborne but server movement remains grounded")
 public class CriticalsA extends Check implements PacketReceiveListener {
     private final Deque<Long> suspiciousAttacks = new ArrayDeque<>();
