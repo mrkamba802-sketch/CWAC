@@ -74,7 +74,7 @@ public final class RonexNewChecks {
         return count;
     }
 
-    @CheckData(name = "AutoClickerA", stableKey = "cwanticheat.combat.auto_clicker_a",
+    @CheckData(name = "AutoClickerA", stableKey = "cwanticheat.combat.auto_clicker_a", experimental = false
             description = "Repeatedly near-identical main-hand swing intervals")
     public static class AutoClickerA extends Check implements PacketReceiveListener {
         private final Deque<Long> intervals = new ArrayDeque<>();
@@ -144,7 +144,7 @@ public final class RonexNewChecks {
         }
     }
 
-    @CheckData(name = "MaceSwapA", stableKey = "cwanticheat.inventory.mace_swap_a",
+    @CheckData(name = "MaceSwapA", stableKey = "cwanticheat.inventory.mace_swap_a", experimental = false
             description = "Repeated rapid mace hotbar swap, attack, and return cycles")
     public static class MaceSwapA extends Check implements PacketReceiveListener {
         private final Deque<Long> cycles = new ArrayDeque<>();
@@ -233,7 +233,7 @@ public final class RonexNewChecks {
         }
     }
 
-    @CheckData(name = "MorePacketsA", stableKey = "cwanticheat.packet.more_packets_a",
+    @CheckData(name = "MorePacketsA", stableKey = "cwanticheat.packet.more_packets_a", experimental = false
             description = "Sustained excess player movement packet rate")
     public static class MorePacketsA extends Check implements PacketReceiveListener {
         private final Deque<Long> movementPackets = new ArrayDeque<>();
@@ -290,7 +290,7 @@ public final class RonexNewChecks {
         }
     }
 
-    @CheckData(name = "ScaffoldD", stableKey = "cwanticheat.scaffold.down_snap_place",
+    @CheckData(name = "ScaffoldD", stableKey = "cwanticheat.scaffold.down_snap_place", experimental = false
             description = "Repeated down-snap rotations around sprinting underfoot placements")
     public static class ScaffoldD extends Check implements PacketReceiveListener, RotationListener, BlockPlaceListener {
         private static final long SNAP_WINDOW_NANOS = 300_000_000L;
@@ -427,7 +427,7 @@ public final class RonexNewChecks {
         }
     }
 
-    @CheckData(name = "AimC", stableKey = "cwanticheat.aim.attack_snap",
+    @CheckData(name = "AimC", stableKey = "cwanticheat.aim.attack_snap", experimental = false
             description = "Tracks rotation acceleration, smooth turn paths and attack-timed snaps")
     public static class AimC extends AimHitCheck implements PacketReceiveListener {
         private final Deque<Boolean> attackWindow = new ArrayDeque<>();
@@ -538,7 +538,7 @@ public final class RonexNewChecks {
         }
     }
 
-    @CheckData(name = "AimD", stableKey = "cwanticheat.aim.rotation_gcd",
+    @CheckData(name = "AimD", stableKey = "cwanticheat.aim.rotation_gcd", experimental = false
             description = "Repeated accurate attacks following rotation deltas outside the inferred mouse GCD grid")
     public static class AimD extends AimHitCheck implements PacketReceiveListener {
         private final Deque<Boolean> gridSamples = new ArrayDeque<>();
@@ -605,7 +605,7 @@ public final class RonexNewChecks {
         }
     }
 
-    @CheckData(name = "AimE", stableKey = "cwanticheat.aim.target_lock_inventory",
+    @CheckData(name = "AimE", stableKey = "cwanticheat.aim.target_lock_inventory", experimental = false
             description = "Tracks unusually precise aim on moving targets and rotations sent with an inventory open")
     public static class AimE extends AimHitCheck implements PacketReceiveListener {
         private final Deque<Boolean> targetWindow = new ArrayDeque<>();
@@ -717,7 +717,7 @@ public final class RonexNewChecks {
         }
     }
 
-    @CheckData(name = "AuraA", stableKey = "cwanticheat.combat.aura_a",
+    @CheckData(name = "AuraA", stableKey = "cwanticheat.combat.aura_a", experimental = false
             description = "Correlates attack packet order, target ray misses, occlusion, shield use, and sprint reset state")
     public static class AuraA extends AimHitCheck implements PacketReceiveListener {
         private final Deque<Boolean> attackWindow = new ArrayDeque<>();
