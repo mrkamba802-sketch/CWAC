@@ -1,0 +1,1239 @@
+name: Build CWanticheat
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cwanticheat-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Bukkit/Paper plugin and source archive
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Extract source archive and apply punishment configs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ARCHIVE="$GITHUB_WORKSPACE/CWanticheat-source.zip"
+          if [[ ! -f "$ARCHIVE" ]]; then
+            echo "::error::CWanticheat-source.zip was not found in the repository root."
+            exit 1
+          fi
+
+          EXTRACT_DIR="$RUNNER_TEMP/cwanticheat-source"
+          mkdir -p "$EXTRACT_DIR"
+          unzip -q "$ARCHIVE" -d "$EXTRACT_DIR"
+
+          PROJECT_DIR=""
+          if [[ -f "$EXTRACT_DIR/gradlew" ]]; then
+            PROJECT_DIR="$EXTRACT_DIR"
+          else
+            WRAPPER="$(find "$EXTRACT_DIR" -type f -name gradlew -print -quit || true)"
+            if [[ -n "$WRAPPER" ]]; then
+              PROJECT_DIR="$(dirname "$WRAPPER")"
+            else
+              SETTINGS="$(find "$EXTRACT_DIR" -type f \( -name settings.gradle -o -name settings.gradle.kts \) -print -quit || true)"
+              if [[ -n "$SETTINGS" ]]; then
+                PROJECT_DIR="$(dirname "$SETTINGS")"
+              fi
+            fi
+          fi
+
+          if [[ -z "$PROJECT_DIR" ]]; then
+            echo "::error::Could not locate the Gradle project inside CWanticheat-source.zip."
+            exit 1
+          fi
+
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          echo "Gradle project: $PROJECT_DIR"
+
+          CONFIG_SOURCE="$GITHUB_WORKSPACE/CWanticheat/common/src/main/resources/punishments"
+          if [[ -d "$CONFIG_SOURCE" ]]; then
+            mkdir -p "$PROJECT_DIR/common/src/main/resources/punishments"
+            cp -f "$CONFIG_SOURCE"/*.yml "$PROJECT_DIR/common/src/main/resources/punishments/"
+            echo "Applied grouped punishment configs from the repository."
+          else
+            echo "::error::Grouped punishment config directory was not found."
+            exit 1
+          fi
+
+          for folder in config messages; do
+            RESOURCE_SOURCE="$GITHUB_WORKSPACE/CWanticheat/common/src/main/resources/$folder"
+            if [[ -d "$RESOURCE_SOURCE" ]]; then
+              mkdir -p "$PROJECT_DIR/common/src/main/resources/$folder"
+              cp -f "$RESOURCE_SOURCE"/*.yml "$PROJECT_DIR/common/src/main/resources/$folder/"
+            fi
+          done
+
+          SOURCE_OVERLAY="$GITHUB_WORKSPACE/CWanticheat/common/src/main/java"
+          if [[ ! -d "$SOURCE_OVERLAY" ]]; then
+            echo "::error::Check source overlay directory was not found."
+            exit 1
+          fi
+          mkdir -p "$PROJECT_DIR/common/src/main/java"
+          cp -a "$SOURCE_OVERLAY/." "$PROJECT_DIR/common/src/main/java/"
+          echo "Applied new check source files from the repository."
+          grep -q 'stableKey = "grim.inventory.auto_swap_c"' "$PROJECT_DIR/common/src/main/java/ac/grim/grimac/checks/impl/inventory/AutoSwapC.java"
+          grep -q 'name = "AutoClickerA"' "$SOURCE_OVERLAY/ac/grim/grimac/checks/impl/ronex/RonexNewChecks.java"
+
+          python3 - "$PROJECT_DIR" <<'PY'
+          from pathlib import Path
+          import re
+          import sys
+
+          root = Path(sys.argv[1])
+
+          # Publish the first stable CWanticheat release as 1.0.0.
+          version_build = root / "build.gradle.kts"
+          version_text = version_build.read_text(encoding="utf-8")
+          version_text, version_count = re.subn(
+              r'(?m)^val baseVersion = "[^"]+"
+          def replace_once(path: Path, old: str, new: str):
+              text = path.read_text(encoding="utf-8")
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"Expected one patch anchor in {path}, found {count}: {old[:90]!r}")
+              path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          manager = root / "common/src/main/java/ac/grim/grimac/manager/CheckManager.java"
+          replace_once(manager, "import ac.grim.grimac.checks.impl.aim.AimDuplicateLook;",
+              "import ac.grim.grimac.checks.impl.aim.AimA;\nimport ac.grim.grimac.checks.impl.aim.AimB;\nimport ac.grim.grimac.checks.impl.aim.AimF;\nimport ac.grim.grimac.checks.impl.baritone.BaritoneA;\nimport ac.grim.grimac.checks.impl.aim.AimDuplicateLook;")
+          replace_once(manager, "import ac.grim.grimac.checks.impl.aim.AimDuplicateLook;",
+              "import ac.grim.grimac.checks.impl.combat.AuraB;\nimport ac.grim.grimac.checks.impl.combat.KillAuraD;\nimport ac.grim.grimac.checks.impl.combat.CriticalsA;\nimport ac.grim.grimac.checks.impl.combat.InvHitA;\nimport ac.grim.grimac.checks.impl.combat.TriggerBotA;\nimport ac.grim.grimac.checks.impl.aim.ElytraAimA;\nimport ac.grim.grimac.checks.impl.aim.ElytraAimB;\nimport ac.grim.grimac.checks.impl.ronex.RonexAdvancedChecks;\nimport ac.grim.grimac.checks.impl.ronex.RonexExtraChecks;\nimport ac.grim.grimac.checks.impl.aim.AimDuplicateLook;")
+          replace_once(manager, "import ac.grim.grimac.checks.impl.ronex.RonexExtraChecks;",
+              "import ac.grim.grimac.checks.impl.ronex.RonexExtraChecks;\nimport ac.grim.grimac.checks.impl.ronex.RonexNewChecks;")
+          replace_once(manager, "import ac.grim.grimac.checks.impl.groundspoof.NoFall;",
+              "import ac.grim.grimac.checks.impl.groundspoof.NoFall;\nimport ac.grim.grimac.checks.impl.groundspoof.NoFallA;")
+          replace_once(manager, "import ac.grim.grimac.checks.impl.movement.NoSlow;",
+              "import ac.grim.grimac.checks.impl.movement.AirStuck;\nimport ac.grim.grimac.checks.impl.movement.AirStuckA;\nimport ac.grim.grimac.checks.impl.movement.AirStuckB;\nimport ac.grim.grimac.checks.impl.movement.HighJumpA;\nimport ac.grim.grimac.checks.impl.movement.NoSlow;\nimport ac.grim.grimac.checks.impl.movement.StrafeA;\nimport ac.grim.grimac.checks.impl.movement.StrafeB;\nimport ac.grim.grimac.checks.impl.movement.VoidClip;\nimport ac.grim.grimac.checks.impl.movement.NoSlowA;\nimport ac.grim.grimac.checks.impl.movement.NoSlowB;\nimport ac.grim.grimac.checks.impl.movement.NoSlowC;\nimport ac.grim.grimac.checks.impl.movement.NoWebA;\nimport ac.grim.grimac.checks.impl.movement.NoWebB;")
+          replace_once(manager, ".put(Reach.class, new Reach(player))",
+              ".put(Reach.class, new Reach(player))\n                .put(KillAuraA.class, new KillAuraA(player))\n                .put(KillAuraB.class, new KillAuraB(player))\n                .put(KillAuraC.class, new KillAuraC(player))")
+          replace_once(manager, ".put(NoFall.class, new NoFall(player))",
+              ".put(NoFall.class, new NoFall(player))\n                .put(NoFallA.class, new NoFallA(player))")
+          replace_once(manager, ".put(AimProcessor.class, new AimProcessor(player))",
+              ".put(AimProcessor.class, new AimProcessor(player))\n                .put(AimA.class, new AimA(player))\n                .put(AimB.class, new AimB(player))\n                .put(RonexNewChecks.AimC.class, new RonexNewChecks.AimC(player))\n                .put(RonexNewChecks.AimD.class, new RonexNewChecks.AimD(player))\n                .put(RonexNewChecks.AimE.class, new RonexNewChecks.AimE(player))\n                .put(AimF.class, new AimF(player))\n                .put(BaritoneA.class, new BaritoneA(player))")
+          replace_once(manager, ".put(NoSlow.class, new NoSlow(player))",
+              ".put(NoSlow.class, new NoSlow(player))\n                .put(NoSlowA.class, new NoSlowA(player))\n                .put(NoSlowB.class, new NoSlowB(player))\n                .put(NoSlowC.class, new NoSlowC(player))\n                .put(NoWebA.class, new NoWebA(player))\n                .put(NoWebB.class, new NoWebB(player))\n                .put(AirStuck.class, new AirStuck(player))\n                .put(AirStuckA.class, new AirStuckA(player))\n                .put(AirStuckB.class, new AirStuckB(player))\n                .put(HighJumpA.class, new HighJumpA(player))\n                .put(VoidClip.class, new VoidClip(player))\n                .put(StrafeA.class, new StrafeA(player))\n                .put(StrafeB.class, new StrafeB(player))")
+
+          ground_spoof = root / "common/src/main/java/ac/grim/grimac/checks/impl/prediction/GroundSpoof.java"
+          replace_once(ground_spoof,
+              "        boolean claimed = player.clientClaimsLastOnGround;\n        if (claimed != player.onGround) {",
+              "        boolean claimed = player.clientClaimsLastOnGround;\n        boolean sustainedNoFall = claimed && !player.onGround && player.fallDistance > 2.0 && player.actualMovement.getY() < -0.05;\n        if (claimed != player.onGround && !sustainedNoFall) {")
+
+          replace_once(manager, ".put(RotationPlace.class, new RotationPlace(player))",
+              ".put(RotationPlace.class, new RotationPlace(player))\n                .put(ScaffoldA.class, new ScaffoldA(player))")
+          replace_once(manager, ".put(InventoryG.class, new InventoryG(player))",
+              ".put(InventoryG.class, new InventoryG(player))\n                .put(AutoSwapA.class, new AutoSwapA(player))\n                .put(AutoSwapC.class, new AutoSwapC(player))\n                .put(GhostHandA.class, new GhostHandA(player))")
+
+          replace_once(manager, ".put(KillAuraC.class, new KillAuraC(player))",
+              ".put(KillAuraC.class, new KillAuraC(player))\n                .put(CriticalsA.class, new CriticalsA(player))\n                .put(TriggerBotA.class, new TriggerBotA(player))\n                .put(InvHitA.class, new InvHitA(player))\n                .put(RonexExtraChecks.AutoCrystalA.class, new RonexExtraChecks.AutoCrystalA(player))\n                .put(RonexExtraChecks.BlockReach.class, new RonexExtraChecks.BlockReach(player))\n                .put(RonexNewChecks.AutoClickerA.class, new RonexNewChecks.AutoClickerA(player))\n                .put(RonexNewChecks.MaceSwapA.class, new RonexNewChecks.MaceSwapA(player))\n                .put(RonexNewChecks.MorePacketsA.class, new RonexNewChecks.MorePacketsA(player))\n                .put(RonexNewChecks.AuraA.class, new RonexNewChecks.AuraA(player))\n                .put(AuraB.class, new AuraB(player))\n                .put(KillAuraD.class, new KillAuraD(player))")
+          replace_once(manager, ".put(BaritoneA.class, new BaritoneA(player))",
+              ".put(BaritoneA.class, new BaritoneA(player))\n                .put(RonexExtraChecks.BaritoneB.class, new RonexExtraChecks.BaritoneB(player))\n                .put(ElytraAimA.class, new ElytraAimA(player))\n                .put(ElytraAimB.class, new ElytraAimB(player))")
+          replace_once(manager, ".put(ScaffoldA.class, new ScaffoldA(player))",
+              ".put(ScaffoldA.class, new ScaffoldA(player))\n                .put(RonexExtraChecks.ScaffoldB.class, new RonexExtraChecks.ScaffoldB(player))\n                .put(RonexExtraChecks.ScaffoldC.class, new RonexExtraChecks.ScaffoldC(player))\n                .put(RonexNewChecks.ScaffoldD.class, new RonexNewChecks.ScaffoldD(player))")
+          replace_once(manager, ".put(GhostHandA.class, new GhostHandA(player))",
+              ".put(GhostHandA.class, new GhostHandA(player))\n                .put(RonexExtraChecks.ChestStealerA.class, new RonexExtraChecks.ChestStealerA(player))\n                .put(RonexAdvancedChecks.AutoFishA.class, new RonexAdvancedChecks.AutoFishA(player))")
+          replace_once(manager, ".put(FastBreak.class, new FastBreak(player))",
+              ".put(FastBreak.class, new FastBreak(player))\n                .put(RonexExtraChecks.BadDig.class, new RonexExtraChecks.BadDig(player))")
+
+          config_manager = root / "common/src/main/java/ac/grim/grimac/manager/config/ConfigManagerFileImpl.java"
+          replace_once(config_manager, "import java.util.regex.Pattern;",
+              "import java.util.regex.Matcher;\nimport java.util.regex.Pattern;")
+          replace_once(config_manager, "        ensureLightningCombatPunishments();",
+              "        ensureLightningCombatPunishments();\n        ensureCustomCheckPunishmentGroups();")
+
+          config_manager_helpers = r"""
+              private void ensureCustomCheckPunishmentGroups() {
+                  File punishments = getConfigFile("punishments.yml");
+                  if (!punishments.exists()) return;
+                  try {
+                      String before = Files.readString(punishments.toPath());
+                      String after = ensureCustomCheckPunishmentGroups(before);
+                      if (!after.equals(before)) {
+                          Files.writeString(punishments.toPath(), after);
+                          LogUtil.info("Added missing CWanticheat check groups to punishments.yml");
+                      }
+                  } catch (IOException e) {
+                      LogUtil.warn("Failed to add CWanticheat punishment groups: " + e);
+                  }
+              }
+
+              static String ensureCustomCheckPunishmentGroups(String configString) {
+                  if (!hasPunishmentsRoot(configString)) return configString;
+
+                  String[][] groups = {
+                          {"Aim", "AimA", "AimB", "AimC", "AimD", "AimE", "AimF"},
+                          {"Scaffold", "ScaffoldA", "ScaffoldB", "ScaffoldC", "ScaffoldD"},
+                          {"Baritone", "BaritoneA", "BaritoneB"},
+                          {"ElytraAim", "ElytraAimA", "ElytraAimB"},
+                          {"NoFall", "NoFallA"},
+                          {"NoSlow", "NoSlowA", "NoSlowB", "NoSlowC"},
+                          {"NoWeb", "NoWebA", "NoWebB"},
+                          {"AirStuck", "AirStuck", "AirStuckA", "AirStuckB"},
+                          {"HighJump", "HighJumpA"},
+                          {"VoidClip", "VoidClip"},
+                          {"Strafe", "StrafeA", "StrafeB"},
+                          {"KillAura", "KillAuraA", "KillAuraB", "KillAuraC", "KillAuraD"},
+                          {"BlockReach", "BlockReach"},
+                          {"AutoCrystalA", "AutoCrystalA"},
+                          {"CriticalsA", "CriticalsA"},
+                          {"TriggerBotA", "TriggerBotA"},
+                          {"ChestStealerA", "ChestStealerA"},
+                          {"AutoFishA", "AutoFishA"},
+                          {"BadDig", "BadDig"},
+                          {"InvHitA", "InvHitA"},
+                          {"AutoSwapA", "AutoSwapA"},
+                          {"AutoSwapC", "AutoSwapC"},
+                          {"GhostHandA", "GhostHandA"},
+                          {"AutoClickerA", "AutoClickerA"},
+                          {"MaceSwapA", "MaceSwapA"},
+                          {"MorePacketsA", "MorePacketsA"},
+                          {"Aura", "AuraA", "AuraB"}
+                  };
+
+                  String result = normalizeAuraPunishmentGroups(configString);
+                  for (String[] mapping : groups) {
+                      String[] checks = new String[mapping.length - 1];
+                      System.arraycopy(mapping, 1, checks, 0, checks.length);
+                      result = ensurePunishmentGroupChecks(result, mapping[0], checks);
+                  }
+                  return result;
+              }
+
+              private static String normalizeAuraPunishmentGroups(String configString) {
+                  Pattern familyPattern = Pattern.compile("(?m)^  (Aura|AuraA|AuraB):\\s*$");
+                  Matcher familyMatcher = familyPattern.matcher(configString);
+                  int[] starts = new int[configString.length()];
+                  int[] ends = new int[configString.length()];
+                  String[] blocks = new String[3];
+                  int count = 0;
+
+                  while (familyMatcher.find()) {
+                      String name = familyMatcher.group(1);
+                      int kind = "Aura".equals(name) ? 0 : ("AuraA".equals(name) ? 1 : 2);
+                      int end = configString.length();
+                      Matcher nextGroup = Pattern.compile("(?m)^  [A-Za-z0-9_-]+:\\s*$").matcher(configString);
+                      if (nextGroup.find(familyMatcher.end())) end = nextGroup.start();
+                      if (blocks[kind] == null) {
+                          blocks[kind] = configString.substring(familyMatcher.start(), end);
+                      }
+                      starts[count] = familyMatcher.start();
+                      ends[count] = end;
+                      count++;
+                  }
+
+                  if (count == 0) return configString;
+                  String selectedBlock = blocks[0] != null ? blocks[0]
+                          : (blocks[1] != null ? blocks[1] : blocks[2]);
+                  selectedBlock = selectedBlock.replaceFirst(
+                          "(?m)^  (?:Aura|AuraA|AuraB):\\s*$", "  Aura:");
+                  Matcher checksHeader = Pattern.compile("(?m)^    checks:\\s*$").matcher(selectedBlock);
+                  if (!checksHeader.find()) return configString;
+
+                  StringBuilder additions = new StringBuilder();
+                  for (String checkName : new String[]{"AuraA", "AuraB"}) {
+                      boolean present = false;
+                      for (String line : selectedBlock.split("\\n")) {
+                          String item = line.trim();
+                          if (item.equals("- \"" + checkName + "\"")
+                                  || item.equals("- " + checkName)
+                                  || item.equals("- '" + checkName + "'")) {
+                              present = true;
+                              break;
+                          }
+                      }
+                      if (!present) additions.append("\\n      - \"").append(checkName).append("\"");
+                  }
+                  String mergedBlock = selectedBlock.substring(0, checksHeader.end())
+                          + additions + selectedBlock.substring(checksHeader.end());
+
+                  StringBuilder normalized = new StringBuilder();
+                  int cursor = 0;
+                  boolean inserted = false;
+                  for (int i = 0; i < count; i++) {
+                      normalized.append(configString, cursor, starts[i]);
+                      if (!inserted) {
+                          normalized.append(mergedBlock);
+                          inserted = true;
+                      }
+                      cursor = ends[i];
+                  }
+                  normalized.append(configString.substring(cursor));
+                  return normalized.toString();
+              }
+
+              private static String ensurePunishmentGroupChecks(String configString, String groupName, String[] checkNames) {
+                  Pattern groupPattern = Pattern.compile("(?m)^  " + Pattern.quote(groupName) + ":\\s*$");
+                  Matcher groupMatcher = groupPattern.matcher(configString);
+                  if (!groupMatcher.find()) {
+                      StringBuilder out = new StringBuilder(configString);
+                      if (!configString.endsWith("\n")) out.append('\n');
+                      out.append("\n  ").append(groupName).append(":\n")
+                              .append("    remove-violations-after: 300\n")
+                              .append("    checks:\n");
+                      for (String checkName : checkNames) {
+                          out.append("      - \"").append(checkName).append("\"\n");
+                      }
+                      out.append("    commands:\n")
+                              .append("      - \"10:5 [alert]\"\n")
+                              .append("      - \"1:1 [log]\"\n")
+                              .append("      - \"20:10 [webhook]\"\n")
+                              .append("      - \"20:10 [proxy]\"\n");
+                      return out.toString();
+                  }
+
+                  int groupStart = groupMatcher.start();
+                  int groupEnd = configString.length();
+                  Matcher nextGroup = Pattern.compile("(?m)^  [A-Za-z0-9_-]+:\\s*$").matcher(configString);
+                  if (nextGroup.find(groupMatcher.end())) groupEnd = nextGroup.start();
+
+                  String groupBlock = configString.substring(groupStart, groupEnd);
+                  Matcher checksHeader = Pattern.compile("(?m)^    checks:\\s*$").matcher(groupBlock);
+                  if (!checksHeader.find()) return configString;
+
+                  StringBuilder additions = new StringBuilder();
+                  for (String checkName : checkNames) {
+                      Pattern checkPattern = Pattern.compile("(?m)^      -\\s*[\"']?" + Pattern.quote(checkName) + "[\"']?\\s*$");
+                      if (!checkPattern.matcher(groupBlock).find()) {
+                          additions.append("\n      - \"").append(checkName).append("\"");
+                      }
+                  }
+                  if (additions.length() == 0) return configString;
+
+                  String updatedGroup = groupBlock.substring(0, checksHeader.end())
+                          + additions
+                          + groupBlock.substring(checksHeader.end());
+                  return configString.substring(0, groupStart) + updatedGroup + configString.substring(groupEnd);
+              }
+
+          """.strip()
+          replace_once(config_manager, "    private void ensureLightningCombatPunishments() {",
+              config_manager_helpers + "\n\n    private void ensureLightningCombatPunishments() {")
+
+          tick_manager = root / "common/src/main/java/ac/grim/grimac/manager/TickManager.java"
+          replace_once(tick_manager, "import ac.grim.grimac.manager.tick.impl.ResetTick;",
+              "import ac.grim.grimac.manager.tick.impl.AirStuckWatchdog;\nimport ac.grim.grimac.manager.tick.impl.ResetTick;")
+          # FlagEvent is an async Bukkit event: run the AirStuck watchdog from asyncTick, not syncTick.
+          replace_once(tick_manager, ".put(ResetTick.class, new ResetTick())",
+              ".put(ResetTick.class, new ResetTick())")
+          replace_once(tick_manager, ".put(TickInventory.class, new TickInventory())",
+              ".put(TickInventory.class, new TickInventory())\n                .put(AirStuckWatchdog.class, new AirStuckWatchdog())")
+
+          setback = root / "common/src/main/java/ac/grim/grimac/manager/SetbackTeleportUtil.java"
+          replace_once(setback,
+              "        Vector3dm clientVel = lastKnownGoodPosition.vector.clone();",
+              "        boolean hardMovementSetback = !isResync && simulateNextTickPosition;\n        Vector3dm clientVel = lastKnownGoodPosition.vector.clone();\n        if (hardMovementSetback) {\n            clientVel.setX(0.0D);\n            clientVel.setY(0.0D);\n            clientVel.setZ(0.0D);\n        }")
+          replace_once(setback,
+              "        if (futureKb.first() != null && !futureKb.first().isSetback) {",
+              "        if (!hardMovementSetback && futureKb.first() != null && !futureKb.first().isSetback) {")
+          replace_once(setback,
+              "        if (futureExplosion != null && (futureKb.first() == null",
+              "        if (!hardMovementSetback && futureExplosion != null && (futureKb.first() == null")
+          replace_once(setback,
+              "        Vector3d position = lastKnownGoodPosition.pos;",
+              "        Vector3d position = lastKnownGoodPosition.pos;\n        if (hardMovementSetback) {\n            double nudgeX = Math.abs(player.actualMovement.getX()) > 1.0E-6\n                    ? -Math.signum(player.actualMovement.getX()) * 0.001D : 0.001D;\n            double nudgeZ = Math.abs(player.actualMovement.getZ()) > 1.0E-6\n                    ? -Math.signum(player.actualMovement.getZ()) * 0.001D : 0.0D;\n            position = position.withX(position.getX() + nudgeX).withZ(position.getZ() + nudgeZ);\n        }")
+          replace_once(setback,
+              "import java.util.ArrayList;",
+              "import java.util.ArrayDeque;\nimport java.util.ArrayList;")
+          replace_once(setback,
+              "    private long lastWorldResync = 0;",
+              "    private long lastWorldResync = 0;\n    private final ArrayDeque<SetbackPosWithVector> recentValidPositions = new ArrayDeque<>(4);")
+          replace_once(setback,
+              "    public void executeForceResync() {",
+              "    private void rememberValidPosition(Vector3dm velocity) {\n        SetbackPosWithVector valid = new SetbackPosWithVector(\n                new Vector3d(player.x, player.y, player.z), velocity.clone());\n        lastKnownGoodPosition = valid;\n        if (recentValidPositions.size() >= 4) recentValidPositions.removeFirst();\n        recentValidPositions.addLast(valid);\n    }\n\n    public void executeForceResync() {")
+          replace_once(setback,
+              "    public boolean executeViolationSetback() {\n        if (isExempt()) return false;\n        blockMovementsUntilResync(true, false);",
+              "    public boolean executeViolationSetback() {\n        if (isExempt()) return false;\n        if (recentValidPositions.size() >= 4) {\n            SetbackPosWithVector bufferedSafePosition = recentValidPositions.peekFirst();\n            if (bufferedSafePosition != null) {\n                lastKnownGoodPosition = bufferedSafePosition;\n                recentValidPositions.clear();\n                recentValidPositions.addLast(bufferedSafePosition);\n            }\n        }\n        blockMovementsUntilResync(true, false);")
+          setback_text = setback.read_text(encoding="utf-8")
+          old_valid_update = "lastKnownGoodPosition = new SetbackPosWithVector(new Vector3d(player.x, player.y, player.z), afterTickFriction);"
+          if setback_text.count(old_valid_update) != 2:
+              raise SystemExit(f"Expected two last-known-good update sites, found {setback_text.count(old_valid_update)}")
+          setback_text = setback_text.replace(old_valid_update, "rememberValidPosition(afterTickFriction);")
+          setback.write_text(setback_text, encoding="utf-8")
+
+          replace_once(setback,
+              "            if (data.getVelocity() != null && data.getVelocity().lengthSquared() > 0) {",
+              "            if (data.getVelocity() != null) {")
+          replace_once(setback,
+              "            simulateFriction(clientVel);",
+              "            if (hardMovementSetback) {\n                clientVel.setX(0.0D);\n                clientVel.setY(0.0D);\n                clientVel.setZ(0.0D);\n            } else {\n                simulateFriction(clientVel);\n            }")
+
+
+          engine = root / "common/src/main/java/ac/grim/grimac/predictionengine/predictions/PredictionEngine.java"
+          replace_once(engine, "package ac.grim.grimac.predictionengine.predictions;\n",
+              "package ac.grim.grimac.predictionengine.predictions;\n\nimport ac.grim.grimac.checks.impl.movement.NoSlowA;\nimport ac.grim.grimac.checks.impl.movement.NoSlowB;\nimport ac.grim.grimac.checks.impl.movement.NoSlowC;\nimport ac.grim.grimac.checks.impl.movement.NoWebA;\nimport ac.grim.grimac.checks.impl.movement.NoWebB;\n")
+          replace_once(engine,
+              "player.checkManager.getNoSlow().handlePredictionAnalysis(Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy)));",
+              "double itemUseOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy));\n                player.checkManager.getNoSlow().handlePredictionAnalysis(itemUseOffset);\n                player.checkManager.get(NoSlowA.class).handlePredictionAnalysis(itemUseOffset);\n                player.checkManager.get(NoSlowB.class).handlePredictionAnalysis(itemUseOffset);\n                player.checkManager.get(NoSlowC.class).handlePredictionAnalysis(itemUseOffset);")
+          replace_once(engine,
+              "            if (player.checkManager.getKnockbackHandler().shouldIgnoreForPrediction(clientVelAfterInput) ||",
+              "            int webMask = StuckSpeed.COBWEB.getIndex() | StuckSpeed.COBWEB_WEAVING.getIndex();\n            if ((clientVelAfterInput.stuckSpeedMultiplier.getIndex() & webMask) != 0) {\n                double webOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy));\n                player.checkManager.get(NoWebA.class).handlePredictionAnalysis(webOffset);\n\n                double horizontalError = Math.pow(outputVel.getX() - player.actualMovement.getX(), 2)\n                        + Math.pow(outputVel.getZ() - player.actualMovement.getZ(), 2);\n                double horizontalOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(horizontalError));\n                player.checkManager.get(NoWebB.class).handlePredictionAnalysis(horizontalOffset);\n            }\n\n            if (player.checkManager.getKnockbackHandler().shouldIgnoreForPrediction(clientVelAfterInput) ||")
+          # Give the prediction check its user-facing name without changing its engine.
+          offset_handler = root / "common/src/main/java/ac/grim/grimac/checks/impl/prediction/OffsetHandler.java"
+          offset_text = offset_handler.read_text(encoding="utf-8")
+          offset_text = offset_text.replace(
+              '@CheckData(name = "Simulation", stableKey = "grim.prediction.simulation"',
+              '@CheckData(name = "Prediction", stableKey = "grim.prediction.model"')
+          offset_text = offset_text.replace('"Simulation.', '"Prediction.')
+          offset_handler.write_text(offset_text, encoding="utf-8")
+
+          knockback = root / "common/src/main/java/ac/grim/grimac/checks/impl/velocity/KnockbackHandler.java"
+          knockback_text = knockback.read_text(encoding="utf-8")
+          old_annotation = '@CheckData(name = "AntiKB", stableKey = "grim.velocity.anti_knockback", alternativeName = "AntiKnockback", configName = "Knockback"'
+          new_annotation = '@CheckData(name = "VelocityA", stableKey = "grim.velocity.velocity_a", alternativeName = "AntiKB", configName = "Knockback"'
+          if knockback_text.count(old_annotation) != 1:
+              raise SystemExit("Expected one AntiKB annotation in KnockbackHandler")
+          knockback.write_text(knockback_text.replace(old_annotation, new_annotation, 1), encoding="utf-8")
+
+          no_slow_a = root / "common/src/main/java/ac/grim/grimac/checks/impl/movement/NoSlowA.java"
+          no_slow_a_text = no_slow_a.read_text(encoding="utf-8")
+          no_slow_a_text = no_slow_a_text.replace("0.0005", "0.0001")
+          no_slow_a_text = no_slow_a_text.replace("suspiciousTicks >= 3", "suspiciousTicks >= 2")
+          no_slow_a.write_text(no_slow_a_text, encoding="utf-8")
+
+          # Keep the alert prefix and player name unbolded in both runtime fallbacks and locale messages.
+          for relative in (
+              "common/src/main/java/ac/grim/grimac/manager/PunishmentManager.java",
+              "common/src/main/java/ac/grim/grimac/manager/config/BaseConfigManager.java",
+              "common/src/main/java/ac/grim/grimac/utils/anticheat/MessageUtil.java",
+              "common/src/main/resources/messages/en.yml",
+              "common/src/main/resources/messages/ru.yml",
+          ):
+              path = root / relative
+              text = path.read_text(encoding="utf-8")
+              text = text.replace("<bold>CWanticheat</bold>", "CWanticheat")
+              text = text.replace("<bold>%player%</bold>", "%player%")
+              text = text.replace("<bold>%check_name%</bold>", "%check_name%")
+              path.write_text(text, encoding="utf-8")
+
+          # Align the packaged default config with the renamed checks and ship parameters for every new check.
+          import re
+          new_check_defaults = {
+              "NoSlowA": "NoSlowA:\n    threshold: 0.00005",
+              "NoSlowB": "NoSlowB:\n    threshold: 0.0025\n    sample-window: 8\n    required-samples: 6\n    evidence-timeout-ms: 900",
+              "NoSlowC": "NoSlowC:\n    threshold: 0.00012\n    sample-window: 8\n    required-samples: 6",
+              "NoWebA": "NoWebA:\n    threshold: 0.0005",
+              "NoWebB": "NoWebB:\n    threshold: 0.0003",
+              "AirStuck": "AirStuck:\n    threshold: 0.03",
+              "AirStuckA": "AirStuckA:\n    packet-silence-ticks: 12\n    vertical-offset-threshold: 0.005\n    action-suppression-ticks: 18",
+              "AirStuckB": "AirStuckB:\n    predicted-y-threshold: 0.10\n    maximum-actual-y: 0.035\n    minimum-offset: 0.0025\n    window: 8\n    required-samples: 6",
+              "HighJumpA": "HighJumpA:\n    vertical-excess-threshold: 0.12",
+              "ScaffoldA": "ScaffoldA:\n    evidence-to-flag: 6",
+              "AutoSwapA": "AutoSwapA:\n    cycle-window-ms: 350",
+              "AutoSwap": "AutoSwap:\n    c:\n        debug: false",
+              "GhostHandA": "GhostHandA:\n    evidence-to-cancel: 2",
+              "AimB": "AimB:\n    snap-threshold: 50.0\n    gcd-tolerance: 0.08\n    required-evidence: 5",
+              "KillAuraA": "KillAuraA:\n    maximum-attack-gap-ms: 80\n    burst-window-ms: 5000\n    required-bursts: 3",
+              "KillAuraB": "KillAuraB:\n    minimum-excess-degrees: 10.0\n    maximum-distance: 5.0\n    required-hits: 4\n    hit-window: 8",
+              "KillAuraC": "KillAuraC:\n    maximum-distance: 5.0\n    required-hits: 3\n    hit-window: 6",
+              "KillAuraD": "KillAuraD:\n    minimum-target-angle-degrees: 14.0\n    maximum-observed-turn-degrees: 5.0\n    maximum-distance: 6.0\n    maximum-attack-gap-ms: 250\n    window: 8\n    required-switches: 4",
+              "BaritoneA": "BaritoneA:\n    required-evidence: 16\n    max-pitch-step: 1.0",
+              "VoidClip": "VoidClip:\n    vertical-error-threshold: 0.35\n    prediction-offset-threshold: 0.15\n    required-streak: 2",
+              "StrafeA": "StrafeA:\n    horizontal-excess-threshold: 0.025\n    prediction-offset-threshold: 0.012\n    required-streak: 4",
+              "StrafeB": "StrafeB:\n    lateral-error-threshold: 0.02\n    prediction-offset-threshold: 0.015\n    required-streak: 3",
+              "BlockReach": "BlockReach:\n    maximum-distance: 6.0",
+              "ScaffoldB": "ScaffoldB:\n    minimum-speed: 0.10\n    minimum-fall-speed: 0.24\n    maximum-interval-variation: 0.35\n    required-placements: 6",
+              "ScaffoldC": "ScaffoldC:\n    minimum-speed: 0.08\n    maximum-distance: 5.0\n    window: 8\n    required: 5",
+              "AutoCrystalA": "AutoCrystalA:\n    window-ms: 2000\n    required-cycles: 6",
+              "CriticalsA": "CriticalsA:\n    grounded-vertical-epsilon: 0.02\n    window-ms: 2000\n    required-attacks: 4",
+              "TriggerBotA": "TriggerBotA:\n    maximum-aim-error: 0.55\n    reaction-window-ms: 45\n    sample-window-ms: 3000\n    minimum-attack-gap-ms: 65\n    required-attacks: 5",
+              "ChestStealerA": "ChestStealerA:\n    window-ms: 250\n    max-clicks: 10\n    min-quick-moves: 6",
+              "BaritoneB": "BaritoneB:\n    required-turns: 6\n    minimum-turn-degrees: 12.0\n    maximum-turn-degrees: 90.0\n    maximum-angle-variation: 0.10\n    maximum-interval-variation: 0.15\n    minimum-speed: 0.08",
+              "AutoFishA": "AutoFishA:\n    minimum-interval-ms: 35\n    maximum-interval-ms: 280\n    required-intervals: 5\n    maximum-variation: 0.75",
+              "BadDig": "BadDig:\n    minimum-duration-ms: 45\n    window: 7\n    required: 5",
+              "InvHitA": "InvHitA:\n    window-ms: 1200\n    open-grace-ms: 180\n    required-attacks: 2",
+              "ElytraAimA": "ElytraAimA:\n    minimum-snap-degrees: 13.0\n    maximum-aim-error: 1.2\n    required-hits: 3\n    hit-window: 6",
+              "ElytraAimB": "ElytraAimB:\n    minimum-target-movement: 0.10\n    maximum-spatial-error: 0.16\n    required-hits: 4\n    hit-window: 7",
+              "AimA": "AimA:\n    minimum-samples: 10\n    maximum-cv: 0.16\n    minimum-direction-consistency: 0.95\n    maximum-aim-error: 1.4\n    attack-window: 6\n    required-attacks: 3",
+              "AimC": "AimC:\n    minimum-snap-degrees: 13.0\n    minimum-acceleration: 8.0\n    minimum-jerk: 12.0\n    maximum-smooth-cv: 0.18\n    maximum-aim-error: 1.3\n    required-hits: 3\n    window: 6",
+              "AimD": "AimD:\n    grid-tolerance: 0.14\n    maximum-aim-error: 2.0\n    grid-window: 12\n    minimum-off-grid-samples: 9\n    attack-window: 6\n    required-attacks: 3",
+              "AimE": "AimE:\n    minimum-target-movement: 0.12\n    maximum-spatial-error: 0.08\n    required-hits: 5\n    window: 7",
+              "AimF": "AimF:\n    minimum-rotation-degrees: 12.0\n    minimum-reaction-ms: 20\n    maximum-reaction-ms: 140\n    maximum-aim-error: 0.9\n    maximum-reaction-cv: 0.20\n    window: 8\n    required-switches: 5",
+              "ScaffoldD": "ScaffoldD:\n    minimum-down-snap: 24.0\n    minimum-return-snap: 18.0\n    window: 6\n    required-evidence: 3",
+              "AutoClickerA": "AutoClickerA:\n    sample-count: 16\n    required-windows: 3\n    minimum-interval-ms: 35\n    maximum-interval-ms: 160\n    maximum-cv: 0.025",
+              "MaceSwapA": "MaceSwapA:\n    maximum-cycle-ms: 700\n    maximum-attack-delay-ms: 350\n    cycle-window-ms: 5000\n    required-cycles: 3",
+              "MorePacketsA": "MorePacketsA:\n    window-ms: 1000\n    maximum-packets: 34\n    required-windows: 3",
+              "AuraA": "AuraA:\n    window: 7\n    required-evidence: 3\n    maximum-distance: 5.5",
+              "AuraB": "AuraB:\n    minimum-interval-ms: 75\n    maximum-interval-ms: 500\n    sample-count: 20\n    maximum-cv: 0.012\n    minimum-target-switches: 5\n    required-windows: 3",
+          }
+          for lang in ("en", "ru"):
+              config_path = root / "common/src/main/resources/config" / f"{lang}.yml"
+              config_text = config_path.read_text(encoding="utf-8")
+              config_text = re.sub(r"(?m)^Simulation:", "Prediction:", config_text, count=1)
+
+              # Lower the actual NoSlow threshold, not unrelated thresholds elsewhere in the config.
+              match = re.search(r"(?ms)^NoSlow:\n(.*?)(?=^[A-Za-z][A-Za-z0-9_-]*:\n|\Z)", config_text)
+              if not match:
+                  raise SystemExit(f"NoSlow config section missing in {config_path}")
+              no_slow_section = match.group(1)
+              no_slow_section, count = re.subn(r"(?m)^    threshold: 0\.001$", "    threshold: 0.0001", no_slow_section, count=1)
+              if count != 1:
+                  raise SystemExit(f"NoSlow threshold not found in {config_path}")
+              config_text = config_text[:match.start(1)] + no_slow_section + config_text[match.end(1):]
+
+              # Replace existing sections by top-level YAML section boundaries; append them when absent.
+              config_lines = config_text.splitlines()
+              for key in ("KillAuraA", "KillAuraB", "KillAuraC", "KillAuraD", "AimA", "AimC", "AimD", "AimE", "AimF", "ScaffoldA", "ScaffoldD", "AirStuckB", "AutoClickerA", "MaceSwapA", "MorePacketsA", "AuraA", "AuraB"):
+                  starts = [i for i, line in enumerate(config_lines) if line == key + ":"]
+                  if len(starts) > 1:
+                      raise SystemExit(f"Found duplicate {key} config sections in {config_path}")
+                  block_lines = new_check_defaults[key].splitlines()
+                  if starts:
+                      start = starts[0]
+                      end = start + 1
+                      while end < len(config_lines):
+                          line = config_lines[end]
+                          if line and not line[0].isspace() and line.endswith(":"):
+                              break
+                          end += 1
+                      config_lines[start:end] = block_lines + [""]
+                  else:
+                      if config_lines and config_lines[-1].strip():
+                          config_lines.append("")
+                      config_lines.extend(block_lines)
+                      config_lines.append("")
+              config_text = "\n".join(config_lines).rstrip() + "\n"
+
+              for key, block in new_check_defaults.items():
+                  if re.search(rf"(?m)^{re.escape(key)}:", config_text):
+                      continue
+                  config_text = config_text.rstrip() + "\n\n" + block + "\n"
+              config_path.write_text(config_text, encoding="utf-8")
+
+          # Keep only English and Russian resource locales, with English as fallback for all others.
+          for folder_name in ("config", "messages", "punishments", "database", "discord"):
+              folder = root / "common/src/main/resources" / folder_name
+              if folder.exists():
+                  for locale_file in folder.glob("*.yml"):
+                      if locale_file.stem not in ("en", "ru"):
+                          locale_file.unlink()
+
+          print("Applied renamed checks, AirStuck watchdog, requested checks, AimB false-positive hardening, config defaults, unbolded alerts, and ru/en-only locales.")
+          PY
+
+      - name: Build only the Bukkit/Paper plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$PROJECT_DIR"
+          chmod +x ./gradlew
+          ./gradlew --no-daemon clean :bukkit:shadowJar -Prelease=true -PshadePE=true -Prelocate=true
+
+      - name: Verify and package the ready-to-install plugin and source
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PLUGIN_DIR="$PROJECT_DIR/bukkit/build/libs"
+          mapfile -t PLUGIN_JARS < <(find "$PLUGIN_DIR" -maxdepth 1 -type f -name 'cwanticheat-bukkit-*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' | sort)
+
+          if [[ "${#PLUGIN_JARS[@]}" -ne 1 ]]; then
+            echo "::error::Expected exactly one cwanticheat-bukkit plugin JAR, found ${#PLUGIN_JARS[@]}."
+            printf '%s\n' "${PLUGIN_JARS[@]}"
+            exit 1
+          fi
+
+          PLUGIN_JAR="${PLUGIN_JARS[0]}"
+          unzip -tq "$PLUGIN_JAR"
+          unzip -p "$PLUGIN_JAR" plugin.yml > "$RUNNER_TEMP/plugin.yml"
+
+          grep -Eq '^name: CWanticheat$' "$RUNNER_TEMP/plugin.yml"
+          grep -Eq '^main: ac\.grim\.grimac\.platform\.bukkit\.GrimACBukkitLoaderPlugin          if ! grep -q '^ac/grim/grimac/shaded/packetevents/' "$RUNNER_TEMP/plugin-entries.txt"; then
+            echo "::error::PacketEvents classes are missing; refusing to publish a non-standalone plugin."
+            exit 1
+          fi
+
+          for class in \
+            ac/grim/grimac/checks/impl/movement/AirStuckA.class \
+            ac/grim/grimac/checks/impl/movement/AirStuckB.class \
+            ac/grim/grimac/checks/impl/movement/HighJumpA.class \
+            ac/grim/grimac/checks/impl/inventory/AutoSwapA.class \
+            ac/grim/grimac/checks/impl/inventory/GhostHandA.class \
+            ac/grim/grimac/checks/impl/scaffolding/ScaffoldA.class \
+            ac/grim/grimac/checks/impl/baritone/BaritoneA.class \
+            ac/grim/grimac/checks/impl/movement/VoidClip.class \
+            ac/grim/grimac/checks/impl/movement/StrafeA.class \
+            ac/grim/grimac/checks/impl/movement/StrafeB.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$BlockReach.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$ScaffoldB.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$ScaffoldC.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$AutoCrystalA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$ChestStealerA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$BaritoneB.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$BadDig.class \
+            ac/grim/grimac/checks/impl/ronex/RonexAdvancedChecks\$AutoFishA.class \
+            ac/grim/grimac/checks/impl/combat/CriticalsA.class \
+            ac/grim/grimac/checks/impl/combat/TriggerBotA.class \
+            ac/grim/grimac/checks/impl/combat/InvHitA.class \
+            ac/grim/grimac/checks/impl/aim/ElytraAimA.class \
+            ac/grim/grimac/checks/impl/aim/ElytraAimB.class \
+            ac/grim/grimac/checks/impl/aim/AimA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AutoClickerA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$MaceSwapA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$MorePacketsA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$ScaffoldD.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AimC.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AimD.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AimE.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AuraA.class \
+            ac/grim/grimac/checks/impl/aim/AimF.class \
+            ac/grim/grimac/checks/impl/combat/AuraB.class \
+            ac/grim/grimac/checks/impl/combat/KillAuraD.class \
+            ac/grim/grimac/manager/tick/impl/AirStuckWatchdog.class; do
+            if ! grep -q "^$class$" "$RUNNER_TEMP/plugin-entries.txt"; then
+              echo "::error::Missing new check class in the plugin: $class"
+              exit 1
+            fi
+          done
+
+          mkdir -p "$GITHUB_WORKSPACE/dist"
+          cp "$PLUGIN_JAR" "$GITHUB_WORKSPACE/dist/CWanticheat.jar"
+          echo "Verified ready-to-install Bukkit/Paper plugin: dist/CWanticheat.jar"
+
+          cd "$PROJECT_DIR"
+          zip -qr "$GITHUB_WORKSPACE/dist/CWanticheat-source.zip" . \
+            -x '*/build/*' '*/.gradle/*' '.gradle/*' '.git/*' '*/.git/*' '*/.idea/*'
+
+ "$RUNNER_TEMP/plugin.yml"
+          grep -Eq '^version: 1\.0\.0          if ! grep -q '^ac/grim/grimac/shaded/packetevents/' "$RUNNER_TEMP/plugin-entries.txt"; then
+            echo "::error::PacketEvents classes are missing; refusing to publish a non-standalone plugin."
+            exit 1
+          fi
+
+          for class in \
+            ac/grim/grimac/checks/impl/movement/AirStuckA.class \
+            ac/grim/grimac/checks/impl/movement/AirStuckB.class \
+            ac/grim/grimac/checks/impl/movement/HighJumpA.class \
+            ac/grim/grimac/checks/impl/inventory/AutoSwapA.class \
+            ac/grim/grimac/checks/impl/inventory/GhostHandA.class \
+            ac/grim/grimac/checks/impl/scaffolding/ScaffoldA.class \
+            ac/grim/grimac/checks/impl/baritone/BaritoneA.class \
+            ac/grim/grimac/checks/impl/movement/VoidClip.class \
+            ac/grim/grimac/checks/impl/movement/StrafeA.class \
+            ac/grim/grimac/checks/impl/movement/StrafeB.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$BlockReach.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$ScaffoldB.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$ScaffoldC.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$AutoCrystalA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$ChestStealerA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$BaritoneB.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$BadDig.class \
+            ac/grim/grimac/checks/impl/ronex/RonexAdvancedChecks\$AutoFishA.class \
+            ac/grim/grimac/checks/impl/combat/CriticalsA.class \
+            ac/grim/grimac/checks/impl/combat/TriggerBotA.class \
+            ac/grim/grimac/checks/impl/combat/InvHitA.class \
+            ac/grim/grimac/checks/impl/aim/ElytraAimA.class \
+            ac/grim/grimac/checks/impl/aim/ElytraAimB.class \
+            ac/grim/grimac/checks/impl/aim/AimA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AutoClickerA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$MaceSwapA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$MorePacketsA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$ScaffoldD.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AimC.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AimD.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AimE.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AuraA.class \
+            ac/grim/grimac/checks/impl/aim/AimF.class \
+            ac/grim/grimac/checks/impl/combat/AuraB.class \
+            ac/grim/grimac/checks/impl/combat/KillAuraD.class \
+            ac/grim/grimac/manager/tick/impl/AirStuckWatchdog.class; do
+            if ! grep -q "^$class$" "$RUNNER_TEMP/plugin-entries.txt"; then
+              echo "::error::Missing new check class in the plugin: $class"
+              exit 1
+            fi
+          done
+
+          mkdir -p "$GITHUB_WORKSPACE/dist"
+          cp "$PLUGIN_JAR" "$GITHUB_WORKSPACE/dist/CWanticheat.jar"
+          echo "Verified ready-to-install Bukkit/Paper plugin: dist/CWanticheat.jar"
+
+          cd "$PROJECT_DIR"
+          zip -qr "$GITHUB_WORKSPACE/dist/CWanticheat-source.zip" . \
+            -x '*/build/*' '*/.gradle/*' '.gradle/*' '.git/*' '*/.git/*' '*/.idea/*'
+
+ "$RUNNER_TEMP/plugin.yml"
+
+          jar tf "$PLUGIN_JAR" > "$RUNNER_TEMP/plugin-entries.txt"
+          if ! grep -q '^ac/grim/grimac/shaded/packetevents/' "$RUNNER_TEMP/plugin-entries.txt"; then
+            echo "::error::PacketEvents classes are missing; refusing to publish a non-standalone plugin."
+            exit 1
+          fi
+
+          for class in \
+            ac/grim/grimac/checks/impl/movement/AirStuckA.class \
+            ac/grim/grimac/checks/impl/movement/AirStuckB.class \
+            ac/grim/grimac/checks/impl/movement/HighJumpA.class \
+            ac/grim/grimac/checks/impl/inventory/AutoSwapA.class \
+            ac/grim/grimac/checks/impl/inventory/GhostHandA.class \
+            ac/grim/grimac/checks/impl/scaffolding/ScaffoldA.class \
+            ac/grim/grimac/checks/impl/baritone/BaritoneA.class \
+            ac/grim/grimac/checks/impl/movement/VoidClip.class \
+            ac/grim/grimac/checks/impl/movement/StrafeA.class \
+            ac/grim/grimac/checks/impl/movement/StrafeB.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$BlockReach.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$ScaffoldB.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$ScaffoldC.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$AutoCrystalA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$ChestStealerA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$BaritoneB.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$BadDig.class \
+            ac/grim/grimac/checks/impl/ronex/RonexAdvancedChecks\$AutoFishA.class \
+            ac/grim/grimac/checks/impl/combat/CriticalsA.class \
+            ac/grim/grimac/checks/impl/combat/TriggerBotA.class \
+            ac/grim/grimac/checks/impl/combat/InvHitA.class \
+            ac/grim/grimac/checks/impl/aim/ElytraAimA.class \
+            ac/grim/grimac/checks/impl/aim/ElytraAimB.class \
+            ac/grim/grimac/checks/impl/aim/AimA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AutoClickerA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$MaceSwapA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$MorePacketsA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$ScaffoldD.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AimC.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AimD.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AimE.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AuraA.class \
+            ac/grim/grimac/checks/impl/aim/AimF.class \
+            ac/grim/grimac/checks/impl/combat/AuraB.class \
+            ac/grim/grimac/checks/impl/combat/KillAuraD.class \
+            ac/grim/grimac/manager/tick/impl/AirStuckWatchdog.class; do
+            if ! grep -q "^$class$" "$RUNNER_TEMP/plugin-entries.txt"; then
+              echo "::error::Missing new check class in the plugin: $class"
+              exit 1
+            fi
+          done
+
+          mkdir -p "$GITHUB_WORKSPACE/dist"
+          cp "$PLUGIN_JAR" "$GITHUB_WORKSPACE/dist/CWanticheat.jar"
+          echo "Verified ready-to-install Bukkit/Paper plugin: dist/CWanticheat.jar"
+
+          cd "$PROJECT_DIR"
+          zip -qr "$GITHUB_WORKSPACE/dist/CWanticheat-source.zip" . \
+            -x '*/build/*' '*/.gradle/*' '.gradle/*' '.git/*' '*/.git/*' '*/.idea/*'
+
+      - name: Upload ready-to-install plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: CWanticheat-JAR
+          path: dist/CWanticheat.jar
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload source
+        uses: actions/upload-artifact@v4
+        with:
+          name: CWanticheat-source
+          path: dist/CWanticheat-source.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Attach plugin and source to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/CWanticheat.jar
+            dist/CWanticheat-source.zip
+,
+              'val baseVersion = "1.0.0"',
+              version_text,
+              count=1,
+          )
+          if version_count != 1:
+              raise SystemExit("Could not locate the Gradle baseVersion declaration")
+          version_build.write_text(version_text, encoding="utf-8")
+
+
+          def replace_once(path: Path, old: str, new: str):
+              text = path.read_text(encoding="utf-8")
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"Expected one patch anchor in {path}, found {count}: {old[:90]!r}")
+              path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          manager = root / "common/src/main/java/ac/grim/grimac/manager/CheckManager.java"
+          replace_once(manager, "import ac.grim.grimac.checks.impl.aim.AimDuplicateLook;",
+              "import ac.grim.grimac.checks.impl.aim.AimA;\nimport ac.grim.grimac.checks.impl.aim.AimB;\nimport ac.grim.grimac.checks.impl.aim.AimF;\nimport ac.grim.grimac.checks.impl.baritone.BaritoneA;\nimport ac.grim.grimac.checks.impl.aim.AimDuplicateLook;")
+          replace_once(manager, "import ac.grim.grimac.checks.impl.aim.AimDuplicateLook;",
+              "import ac.grim.grimac.checks.impl.combat.AuraB;\nimport ac.grim.grimac.checks.impl.combat.KillAuraD;\nimport ac.grim.grimac.checks.impl.combat.CriticalsA;\nimport ac.grim.grimac.checks.impl.combat.InvHitA;\nimport ac.grim.grimac.checks.impl.combat.TriggerBotA;\nimport ac.grim.grimac.checks.impl.aim.ElytraAimA;\nimport ac.grim.grimac.checks.impl.aim.ElytraAimB;\nimport ac.grim.grimac.checks.impl.ronex.RonexAdvancedChecks;\nimport ac.grim.grimac.checks.impl.ronex.RonexExtraChecks;\nimport ac.grim.grimac.checks.impl.aim.AimDuplicateLook;")
+          replace_once(manager, "import ac.grim.grimac.checks.impl.ronex.RonexExtraChecks;",
+              "import ac.grim.grimac.checks.impl.ronex.RonexExtraChecks;\nimport ac.grim.grimac.checks.impl.ronex.RonexNewChecks;")
+          replace_once(manager, "import ac.grim.grimac.checks.impl.groundspoof.NoFall;",
+              "import ac.grim.grimac.checks.impl.groundspoof.NoFall;\nimport ac.grim.grimac.checks.impl.groundspoof.NoFallA;")
+          replace_once(manager, "import ac.grim.grimac.checks.impl.movement.NoSlow;",
+              "import ac.grim.grimac.checks.impl.movement.AirStuck;\nimport ac.grim.grimac.checks.impl.movement.AirStuckA;\nimport ac.grim.grimac.checks.impl.movement.AirStuckB;\nimport ac.grim.grimac.checks.impl.movement.HighJumpA;\nimport ac.grim.grimac.checks.impl.movement.NoSlow;\nimport ac.grim.grimac.checks.impl.movement.StrafeA;\nimport ac.grim.grimac.checks.impl.movement.StrafeB;\nimport ac.grim.grimac.checks.impl.movement.VoidClip;\nimport ac.grim.grimac.checks.impl.movement.NoSlowA;\nimport ac.grim.grimac.checks.impl.movement.NoSlowB;\nimport ac.grim.grimac.checks.impl.movement.NoSlowC;\nimport ac.grim.grimac.checks.impl.movement.NoWebA;\nimport ac.grim.grimac.checks.impl.movement.NoWebB;")
+          replace_once(manager, ".put(Reach.class, new Reach(player))",
+              ".put(Reach.class, new Reach(player))\n                .put(KillAuraA.class, new KillAuraA(player))\n                .put(KillAuraB.class, new KillAuraB(player))\n                .put(KillAuraC.class, new KillAuraC(player))")
+          replace_once(manager, ".put(NoFall.class, new NoFall(player))",
+              ".put(NoFall.class, new NoFall(player))\n                .put(NoFallA.class, new NoFallA(player))")
+          replace_once(manager, ".put(AimProcessor.class, new AimProcessor(player))",
+              ".put(AimProcessor.class, new AimProcessor(player))\n                .put(AimA.class, new AimA(player))\n                .put(AimB.class, new AimB(player))\n                .put(RonexNewChecks.AimC.class, new RonexNewChecks.AimC(player))\n                .put(RonexNewChecks.AimD.class, new RonexNewChecks.AimD(player))\n                .put(RonexNewChecks.AimE.class, new RonexNewChecks.AimE(player))\n                .put(AimF.class, new AimF(player))\n                .put(BaritoneA.class, new BaritoneA(player))")
+          replace_once(manager, ".put(NoSlow.class, new NoSlow(player))",
+              ".put(NoSlow.class, new NoSlow(player))\n                .put(NoSlowA.class, new NoSlowA(player))\n                .put(NoSlowB.class, new NoSlowB(player))\n                .put(NoSlowC.class, new NoSlowC(player))\n                .put(NoWebA.class, new NoWebA(player))\n                .put(NoWebB.class, new NoWebB(player))\n                .put(AirStuck.class, new AirStuck(player))\n                .put(AirStuckA.class, new AirStuckA(player))\n                .put(AirStuckB.class, new AirStuckB(player))\n                .put(HighJumpA.class, new HighJumpA(player))\n                .put(VoidClip.class, new VoidClip(player))\n                .put(StrafeA.class, new StrafeA(player))\n                .put(StrafeB.class, new StrafeB(player))")
+
+          ground_spoof = root / "common/src/main/java/ac/grim/grimac/checks/impl/prediction/GroundSpoof.java"
+          replace_once(ground_spoof,
+              "        boolean claimed = player.clientClaimsLastOnGround;\n        if (claimed != player.onGround) {",
+              "        boolean claimed = player.clientClaimsLastOnGround;\n        boolean sustainedNoFall = claimed && !player.onGround && player.fallDistance > 2.0 && player.actualMovement.getY() < -0.05;\n        if (claimed != player.onGround && !sustainedNoFall) {")
+
+          replace_once(manager, ".put(RotationPlace.class, new RotationPlace(player))",
+              ".put(RotationPlace.class, new RotationPlace(player))\n                .put(ScaffoldA.class, new ScaffoldA(player))")
+          replace_once(manager, ".put(InventoryG.class, new InventoryG(player))",
+              ".put(InventoryG.class, new InventoryG(player))\n                .put(AutoSwapA.class, new AutoSwapA(player))\n                .put(AutoSwapC.class, new AutoSwapC(player))\n                .put(GhostHandA.class, new GhostHandA(player))")
+
+          replace_once(manager, ".put(KillAuraC.class, new KillAuraC(player))",
+              ".put(KillAuraC.class, new KillAuraC(player))\n                .put(CriticalsA.class, new CriticalsA(player))\n                .put(TriggerBotA.class, new TriggerBotA(player))\n                .put(InvHitA.class, new InvHitA(player))\n                .put(RonexExtraChecks.AutoCrystalA.class, new RonexExtraChecks.AutoCrystalA(player))\n                .put(RonexExtraChecks.BlockReach.class, new RonexExtraChecks.BlockReach(player))\n                .put(RonexNewChecks.AutoClickerA.class, new RonexNewChecks.AutoClickerA(player))\n                .put(RonexNewChecks.MaceSwapA.class, new RonexNewChecks.MaceSwapA(player))\n                .put(RonexNewChecks.MorePacketsA.class, new RonexNewChecks.MorePacketsA(player))\n                .put(RonexNewChecks.AuraA.class, new RonexNewChecks.AuraA(player))\n                .put(AuraB.class, new AuraB(player))\n                .put(KillAuraD.class, new KillAuraD(player))")
+          replace_once(manager, ".put(BaritoneA.class, new BaritoneA(player))",
+              ".put(BaritoneA.class, new BaritoneA(player))\n                .put(RonexExtraChecks.BaritoneB.class, new RonexExtraChecks.BaritoneB(player))\n                .put(ElytraAimA.class, new ElytraAimA(player))\n                .put(ElytraAimB.class, new ElytraAimB(player))")
+          replace_once(manager, ".put(ScaffoldA.class, new ScaffoldA(player))",
+              ".put(ScaffoldA.class, new ScaffoldA(player))\n                .put(RonexExtraChecks.ScaffoldB.class, new RonexExtraChecks.ScaffoldB(player))\n                .put(RonexExtraChecks.ScaffoldC.class, new RonexExtraChecks.ScaffoldC(player))\n                .put(RonexNewChecks.ScaffoldD.class, new RonexNewChecks.ScaffoldD(player))")
+          replace_once(manager, ".put(GhostHandA.class, new GhostHandA(player))",
+              ".put(GhostHandA.class, new GhostHandA(player))\n                .put(RonexExtraChecks.ChestStealerA.class, new RonexExtraChecks.ChestStealerA(player))\n                .put(RonexAdvancedChecks.AutoFishA.class, new RonexAdvancedChecks.AutoFishA(player))")
+          replace_once(manager, ".put(FastBreak.class, new FastBreak(player))",
+              ".put(FastBreak.class, new FastBreak(player))\n                .put(RonexExtraChecks.BadDig.class, new RonexExtraChecks.BadDig(player))")
+
+          config_manager = root / "common/src/main/java/ac/grim/grimac/manager/config/ConfigManagerFileImpl.java"
+          replace_once(config_manager, "import java.util.regex.Pattern;",
+              "import java.util.regex.Matcher;\nimport java.util.regex.Pattern;")
+          replace_once(config_manager, "        ensureLightningCombatPunishments();",
+              "        ensureLightningCombatPunishments();\n        ensureCustomCheckPunishmentGroups();")
+
+          config_manager_helpers = r"""
+              private void ensureCustomCheckPunishmentGroups() {
+                  File punishments = getConfigFile("punishments.yml");
+                  if (!punishments.exists()) return;
+                  try {
+                      String before = Files.readString(punishments.toPath());
+                      String after = ensureCustomCheckPunishmentGroups(before);
+                      if (!after.equals(before)) {
+                          Files.writeString(punishments.toPath(), after);
+                          LogUtil.info("Added missing CWanticheat check groups to punishments.yml");
+                      }
+                  } catch (IOException e) {
+                      LogUtil.warn("Failed to add CWanticheat punishment groups: " + e);
+                  }
+              }
+
+              static String ensureCustomCheckPunishmentGroups(String configString) {
+                  if (!hasPunishmentsRoot(configString)) return configString;
+
+                  String[][] groups = {
+                          {"Aim", "AimA", "AimB", "AimC", "AimD", "AimE", "AimF"},
+                          {"Scaffold", "ScaffoldA", "ScaffoldB", "ScaffoldC", "ScaffoldD"},
+                          {"Baritone", "BaritoneA", "BaritoneB"},
+                          {"ElytraAim", "ElytraAimA", "ElytraAimB"},
+                          {"NoFall", "NoFallA"},
+                          {"NoSlow", "NoSlowA", "NoSlowB", "NoSlowC"},
+                          {"NoWeb", "NoWebA", "NoWebB"},
+                          {"AirStuck", "AirStuck", "AirStuckA", "AirStuckB"},
+                          {"HighJump", "HighJumpA"},
+                          {"VoidClip", "VoidClip"},
+                          {"Strafe", "StrafeA", "StrafeB"},
+                          {"KillAura", "KillAuraA", "KillAuraB", "KillAuraC", "KillAuraD"},
+                          {"BlockReach", "BlockReach"},
+                          {"AutoCrystalA", "AutoCrystalA"},
+                          {"CriticalsA", "CriticalsA"},
+                          {"TriggerBotA", "TriggerBotA"},
+                          {"ChestStealerA", "ChestStealerA"},
+                          {"AutoFishA", "AutoFishA"},
+                          {"BadDig", "BadDig"},
+                          {"InvHitA", "InvHitA"},
+                          {"AutoSwapA", "AutoSwapA"},
+                          {"AutoSwapC", "AutoSwapC"},
+                          {"GhostHandA", "GhostHandA"},
+                          {"AutoClickerA", "AutoClickerA"},
+                          {"MaceSwapA", "MaceSwapA"},
+                          {"MorePacketsA", "MorePacketsA"},
+                          {"AuraA", "AuraA"},
+                          {"AuraB", "AuraB"}
+                  };
+
+                  String result = configString;
+                  for (String[] mapping : groups) {
+                      String[] checks = new String[mapping.length - 1];
+                      System.arraycopy(mapping, 1, checks, 0, checks.length);
+                      result = ensurePunishmentGroupChecks(result, mapping[0], checks);
+                  }
+                  return result;
+              }
+
+              private static String ensurePunishmentGroupChecks(String configString, String groupName, String[] checkNames) {
+                  Pattern groupPattern = Pattern.compile("(?m)^  " + Pattern.quote(groupName) + ":\\s*$");
+                  Matcher groupMatcher = groupPattern.matcher(configString);
+                  if (!groupMatcher.find()) {
+                      StringBuilder out = new StringBuilder(configString);
+                      if (!configString.endsWith("\n")) out.append('\n');
+                      out.append("\n  ").append(groupName).append(":\n")
+                              .append("    remove-violations-after: 300\n")
+                              .append("    checks:\n");
+                      for (String checkName : checkNames) {
+                          out.append("      - \"").append(checkName).append("\"\n");
+                      }
+                      out.append("    commands:\n")
+                              .append("      - \"10:5 [alert]\"\n")
+                              .append("      - \"1:1 [log]\"\n")
+                              .append("      - \"20:10 [webhook]\"\n")
+                              .append("      - \"20:10 [proxy]\"\n");
+                      return out.toString();
+                  }
+
+                  int groupStart = groupMatcher.start();
+                  int groupEnd = configString.length();
+                  Matcher nextGroup = Pattern.compile("(?m)^  [A-Za-z0-9_-]+:\\s*$").matcher(configString);
+                  if (nextGroup.find(groupMatcher.end())) groupEnd = nextGroup.start();
+
+                  String groupBlock = configString.substring(groupStart, groupEnd);
+                  Matcher checksHeader = Pattern.compile("(?m)^    checks:\\s*$").matcher(groupBlock);
+                  if (!checksHeader.find()) return configString;
+
+                  StringBuilder additions = new StringBuilder();
+                  for (String checkName : checkNames) {
+                      Pattern checkPattern = Pattern.compile("(?m)^      -\\s*[\"']?" + Pattern.quote(checkName) + "[\"']?\\s*$");
+                      if (!checkPattern.matcher(groupBlock).find()) {
+                          additions.append("\n      - \"").append(checkName).append("\"");
+                      }
+                  }
+                  if (additions.length() == 0) return configString;
+
+                  String updatedGroup = groupBlock.substring(0, checksHeader.end())
+                          + additions
+                          + groupBlock.substring(checksHeader.end());
+                  return configString.substring(0, groupStart) + updatedGroup + configString.substring(groupEnd);
+              }
+
+          """.strip()
+          replace_once(config_manager, "    private void ensureLightningCombatPunishments() {",
+              config_manager_helpers + "\n\n    private void ensureLightningCombatPunishments() {")
+
+          tick_manager = root / "common/src/main/java/ac/grim/grimac/manager/TickManager.java"
+          replace_once(tick_manager, "import ac.grim.grimac.manager.tick.impl.ResetTick;",
+              "import ac.grim.grimac.manager.tick.impl.AirStuckWatchdog;\nimport ac.grim.grimac.manager.tick.impl.ResetTick;")
+          # FlagEvent is an async Bukkit event: run the AirStuck watchdog from asyncTick, not syncTick.
+          replace_once(tick_manager, ".put(ResetTick.class, new ResetTick())",
+              ".put(ResetTick.class, new ResetTick())")
+          replace_once(tick_manager, ".put(TickInventory.class, new TickInventory())",
+              ".put(TickInventory.class, new TickInventory())\n                .put(AirStuckWatchdog.class, new AirStuckWatchdog())")
+
+          setback = root / "common/src/main/java/ac/grim/grimac/manager/SetbackTeleportUtil.java"
+          replace_once(setback,
+              "        Vector3dm clientVel = lastKnownGoodPosition.vector.clone();",
+              "        boolean hardMovementSetback = !isResync && simulateNextTickPosition;\n        Vector3dm clientVel = lastKnownGoodPosition.vector.clone();\n        if (hardMovementSetback) {\n            clientVel.setX(0.0D);\n            clientVel.setY(0.0D);\n            clientVel.setZ(0.0D);\n        }")
+          replace_once(setback,
+              "        if (futureKb.first() != null && !futureKb.first().isSetback) {",
+              "        if (!hardMovementSetback && futureKb.first() != null && !futureKb.first().isSetback) {")
+          replace_once(setback,
+              "        if (futureExplosion != null && (futureKb.first() == null",
+              "        if (!hardMovementSetback && futureExplosion != null && (futureKb.first() == null")
+          replace_once(setback,
+              "        Vector3d position = lastKnownGoodPosition.pos;",
+              "        Vector3d position = lastKnownGoodPosition.pos;\n        if (hardMovementSetback) {\n            double nudgeX = Math.abs(player.actualMovement.getX()) > 1.0E-6\n                    ? -Math.signum(player.actualMovement.getX()) * 0.001D : 0.001D;\n            double nudgeZ = Math.abs(player.actualMovement.getZ()) > 1.0E-6\n                    ? -Math.signum(player.actualMovement.getZ()) * 0.001D : 0.0D;\n            position = position.withX(position.getX() + nudgeX).withZ(position.getZ() + nudgeZ);\n        }")
+          replace_once(setback,
+              "import java.util.ArrayList;",
+              "import java.util.ArrayDeque;\nimport java.util.ArrayList;")
+          replace_once(setback,
+              "    private long lastWorldResync = 0;",
+              "    private long lastWorldResync = 0;\n    private final ArrayDeque<SetbackPosWithVector> recentValidPositions = new ArrayDeque<>(4);")
+          replace_once(setback,
+              "    public void executeForceResync() {",
+              "    private void rememberValidPosition(Vector3dm velocity) {\n        SetbackPosWithVector valid = new SetbackPosWithVector(\n                new Vector3d(player.x, player.y, player.z), velocity.clone());\n        lastKnownGoodPosition = valid;\n        if (recentValidPositions.size() >= 4) recentValidPositions.removeFirst();\n        recentValidPositions.addLast(valid);\n    }\n\n    public void executeForceResync() {")
+          replace_once(setback,
+              "    public boolean executeViolationSetback() {\n        if (isExempt()) return false;\n        blockMovementsUntilResync(true, false);",
+              "    public boolean executeViolationSetback() {\n        if (isExempt()) return false;\n        if (recentValidPositions.size() >= 4) {\n            SetbackPosWithVector bufferedSafePosition = recentValidPositions.peekFirst();\n            if (bufferedSafePosition != null) {\n                lastKnownGoodPosition = bufferedSafePosition;\n                recentValidPositions.clear();\n                recentValidPositions.addLast(bufferedSafePosition);\n            }\n        }\n        blockMovementsUntilResync(true, false);")
+          setback_text = setback.read_text(encoding="utf-8")
+          old_valid_update = "lastKnownGoodPosition = new SetbackPosWithVector(new Vector3d(player.x, player.y, player.z), afterTickFriction);"
+          if setback_text.count(old_valid_update) != 2:
+              raise SystemExit(f"Expected two last-known-good update sites, found {setback_text.count(old_valid_update)}")
+          setback_text = setback_text.replace(old_valid_update, "rememberValidPosition(afterTickFriction);")
+          setback.write_text(setback_text, encoding="utf-8")
+
+          replace_once(setback,
+              "            if (data.getVelocity() != null && data.getVelocity().lengthSquared() > 0) {",
+              "            if (data.getVelocity() != null) {")
+          replace_once(setback,
+              "            simulateFriction(clientVel);",
+              "            if (hardMovementSetback) {\n                clientVel.setX(0.0D);\n                clientVel.setY(0.0D);\n                clientVel.setZ(0.0D);\n            } else {\n                simulateFriction(clientVel);\n            }")
+
+
+          engine = root / "common/src/main/java/ac/grim/grimac/predictionengine/predictions/PredictionEngine.java"
+          replace_once(engine, "package ac.grim.grimac.predictionengine.predictions;\n",
+              "package ac.grim.grimac.predictionengine.predictions;\n\nimport ac.grim.grimac.checks.impl.movement.NoSlowA;\nimport ac.grim.grimac.checks.impl.movement.NoSlowB;\nimport ac.grim.grimac.checks.impl.movement.NoSlowC;\nimport ac.grim.grimac.checks.impl.movement.NoWebA;\nimport ac.grim.grimac.checks.impl.movement.NoWebB;\n")
+          replace_once(engine,
+              "player.checkManager.getNoSlow().handlePredictionAnalysis(Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy)));",
+              "double itemUseOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy));\n                player.checkManager.getNoSlow().handlePredictionAnalysis(itemUseOffset);\n                player.checkManager.get(NoSlowA.class).handlePredictionAnalysis(itemUseOffset);\n                player.checkManager.get(NoSlowB.class).handlePredictionAnalysis(itemUseOffset);\n                player.checkManager.get(NoSlowC.class).handlePredictionAnalysis(itemUseOffset);")
+          replace_once(engine,
+              "            if (player.checkManager.getKnockbackHandler().shouldIgnoreForPrediction(clientVelAfterInput) ||",
+              "            int webMask = StuckSpeed.COBWEB.getIndex() | StuckSpeed.COBWEB_WEAVING.getIndex();\n            if ((clientVelAfterInput.stuckSpeedMultiplier.getIndex() & webMask) != 0) {\n                double webOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(resultAccuracy));\n                player.checkManager.get(NoWebA.class).handlePredictionAnalysis(webOffset);\n\n                double horizontalError = Math.pow(outputVel.getX() - player.actualMovement.getX(), 2)\n                        + Math.pow(outputVel.getZ() - player.actualMovement.getZ(), 2);\n                double horizontalOffset = Math.sqrt(player.uncertaintyHandler.reduceOffset(horizontalError));\n                player.checkManager.get(NoWebB.class).handlePredictionAnalysis(horizontalOffset);\n            }\n\n            if (player.checkManager.getKnockbackHandler().shouldIgnoreForPrediction(clientVelAfterInput) ||")
+          # Give the prediction check its user-facing name without changing its engine.
+          offset_handler = root / "common/src/main/java/ac/grim/grimac/checks/impl/prediction/OffsetHandler.java"
+          offset_text = offset_handler.read_text(encoding="utf-8")
+          offset_text = offset_text.replace(
+              '@CheckData(name = "Simulation", stableKey = "grim.prediction.simulation"',
+              '@CheckData(name = "Prediction", stableKey = "grim.prediction.model"')
+          offset_text = offset_text.replace('"Simulation.', '"Prediction.')
+          offset_handler.write_text(offset_text, encoding="utf-8")
+
+          knockback = root / "common/src/main/java/ac/grim/grimac/checks/impl/velocity/KnockbackHandler.java"
+          knockback_text = knockback.read_text(encoding="utf-8")
+          old_annotation = '@CheckData(name = "AntiKB", stableKey = "grim.velocity.anti_knockback", alternativeName = "AntiKnockback", configName = "Knockback"'
+          new_annotation = '@CheckData(name = "VelocityA", stableKey = "grim.velocity.velocity_a", alternativeName = "AntiKB", configName = "Knockback"'
+          if knockback_text.count(old_annotation) != 1:
+              raise SystemExit("Expected one AntiKB annotation in KnockbackHandler")
+          knockback.write_text(knockback_text.replace(old_annotation, new_annotation, 1), encoding="utf-8")
+
+          no_slow_a = root / "common/src/main/java/ac/grim/grimac/checks/impl/movement/NoSlowA.java"
+          no_slow_a_text = no_slow_a.read_text(encoding="utf-8")
+          no_slow_a_text = no_slow_a_text.replace("0.0005", "0.0001")
+          no_slow_a_text = no_slow_a_text.replace("suspiciousTicks >= 3", "suspiciousTicks >= 2")
+          no_slow_a.write_text(no_slow_a_text, encoding="utf-8")
+
+          # Keep the alert prefix and player name unbolded in both runtime fallbacks and locale messages.
+          for relative in (
+              "common/src/main/java/ac/grim/grimac/manager/PunishmentManager.java",
+              "common/src/main/java/ac/grim/grimac/manager/config/BaseConfigManager.java",
+              "common/src/main/java/ac/grim/grimac/utils/anticheat/MessageUtil.java",
+              "common/src/main/resources/messages/en.yml",
+              "common/src/main/resources/messages/ru.yml",
+          ):
+              path = root / relative
+              text = path.read_text(encoding="utf-8")
+              text = text.replace("<bold>CWanticheat</bold>", "CWanticheat")
+              text = text.replace("<bold>%player%</bold>", "%player%")
+              text = text.replace("<bold>%check_name%</bold>", "%check_name%")
+              path.write_text(text, encoding="utf-8")
+
+          # Align the packaged default config with the renamed checks and ship parameters for every new check.
+          import re
+          new_check_defaults = {
+              "NoSlowA": "NoSlowA:\n    threshold: 0.00005",
+              "NoSlowB": "NoSlowB:\n    threshold: 0.0025\n    sample-window: 8\n    required-samples: 6\n    evidence-timeout-ms: 900",
+              "NoSlowC": "NoSlowC:\n    threshold: 0.00012\n    sample-window: 8\n    required-samples: 6",
+              "NoWebA": "NoWebA:\n    threshold: 0.0005",
+              "NoWebB": "NoWebB:\n    threshold: 0.0003",
+              "AirStuck": "AirStuck:\n    threshold: 0.03",
+              "AirStuckA": "AirStuckA:\n    packet-silence-ticks: 12\n    vertical-offset-threshold: 0.005\n    action-suppression-ticks: 18",
+              "AirStuckB": "AirStuckB:\n    predicted-y-threshold: 0.10\n    maximum-actual-y: 0.035\n    minimum-offset: 0.0025\n    window: 8\n    required-samples: 6",
+              "HighJumpA": "HighJumpA:\n    vertical-excess-threshold: 0.12",
+              "ScaffoldA": "ScaffoldA:\n    evidence-to-flag: 6",
+              "AutoSwapA": "AutoSwapA:\n    cycle-window-ms: 350",
+              "AutoSwap": "AutoSwap:\n    c:\n        debug: false",
+              "GhostHandA": "GhostHandA:\n    evidence-to-cancel: 2",
+              "AimB": "AimB:\n    snap-threshold: 50.0\n    gcd-tolerance: 0.08\n    required-evidence: 5",
+              "KillAuraA": "KillAuraA:\n    maximum-attack-gap-ms: 80\n    burst-window-ms: 5000\n    required-bursts: 3",
+              "KillAuraB": "KillAuraB:\n    minimum-excess-degrees: 10.0\n    maximum-distance: 5.0\n    required-hits: 4\n    hit-window: 8",
+              "KillAuraC": "KillAuraC:\n    maximum-distance: 5.0\n    required-hits: 3\n    hit-window: 6",
+              "KillAuraD": "KillAuraD:\n    minimum-target-angle-degrees: 14.0\n    maximum-observed-turn-degrees: 5.0\n    maximum-distance: 6.0\n    maximum-attack-gap-ms: 250\n    window: 8\n    required-switches: 4",
+              "BaritoneA": "BaritoneA:\n    required-evidence: 16\n    max-pitch-step: 1.0",
+              "VoidClip": "VoidClip:\n    vertical-error-threshold: 0.35\n    prediction-offset-threshold: 0.15\n    required-streak: 2",
+              "StrafeA": "StrafeA:\n    horizontal-excess-threshold: 0.025\n    prediction-offset-threshold: 0.012\n    required-streak: 4",
+              "StrafeB": "StrafeB:\n    lateral-error-threshold: 0.02\n    prediction-offset-threshold: 0.015\n    required-streak: 3",
+              "BlockReach": "BlockReach:\n    maximum-distance: 6.0",
+              "ScaffoldB": "ScaffoldB:\n    minimum-speed: 0.10\n    minimum-fall-speed: 0.24\n    maximum-interval-variation: 0.35\n    required-placements: 6",
+              "ScaffoldC": "ScaffoldC:\n    minimum-speed: 0.08\n    maximum-distance: 5.0\n    window: 8\n    required: 5",
+              "AutoCrystalA": "AutoCrystalA:\n    window-ms: 2000\n    required-cycles: 6",
+              "CriticalsA": "CriticalsA:\n    grounded-vertical-epsilon: 0.02\n    window-ms: 2000\n    required-attacks: 4",
+              "TriggerBotA": "TriggerBotA:\n    maximum-aim-error: 0.55\n    reaction-window-ms: 45\n    sample-window-ms: 3000\n    minimum-attack-gap-ms: 65\n    required-attacks: 5",
+              "ChestStealerA": "ChestStealerA:\n    window-ms: 250\n    max-clicks: 10\n    min-quick-moves: 6",
+              "BaritoneB": "BaritoneB:\n    required-turns: 6\n    minimum-turn-degrees: 12.0\n    maximum-turn-degrees: 90.0\n    maximum-angle-variation: 0.10\n    maximum-interval-variation: 0.15\n    minimum-speed: 0.08",
+              "AutoFishA": "AutoFishA:\n    minimum-interval-ms: 35\n    maximum-interval-ms: 280\n    required-intervals: 5\n    maximum-variation: 0.75",
+              "BadDig": "BadDig:\n    minimum-duration-ms: 45\n    window: 7\n    required: 5",
+              "InvHitA": "InvHitA:\n    window-ms: 1200\n    open-grace-ms: 180\n    required-attacks: 2",
+              "ElytraAimA": "ElytraAimA:\n    minimum-snap-degrees: 13.0\n    maximum-aim-error: 1.2\n    required-hits: 3\n    hit-window: 6",
+              "ElytraAimB": "ElytraAimB:\n    minimum-target-movement: 0.10\n    maximum-spatial-error: 0.16\n    required-hits: 4\n    hit-window: 7",
+              "AimA": "AimA:\n    minimum-samples: 10\n    maximum-cv: 0.16\n    minimum-direction-consistency: 0.95\n    maximum-aim-error: 1.4\n    attack-window: 6\n    required-attacks: 3",
+              "AimC": "AimC:\n    minimum-snap-degrees: 13.0\n    minimum-acceleration: 8.0\n    minimum-jerk: 12.0\n    maximum-smooth-cv: 0.18\n    maximum-aim-error: 1.3\n    required-hits: 3\n    window: 6",
+              "AimD": "AimD:\n    grid-tolerance: 0.14\n    maximum-aim-error: 2.0\n    grid-window: 12\n    minimum-off-grid-samples: 9\n    attack-window: 6\n    required-attacks: 3",
+              "AimE": "AimE:\n    minimum-target-movement: 0.12\n    maximum-spatial-error: 0.08\n    required-hits: 5\n    window: 7",
+              "AimF": "AimF:\n    minimum-rotation-degrees: 12.0\n    minimum-reaction-ms: 20\n    maximum-reaction-ms: 140\n    maximum-aim-error: 0.9\n    maximum-reaction-cv: 0.20\n    window: 8\n    required-switches: 5",
+              "ScaffoldD": "ScaffoldD:\n    minimum-down-snap: 24.0\n    minimum-return-snap: 18.0\n    window: 6\n    required-evidence: 3",
+              "AutoClickerA": "AutoClickerA:\n    sample-count: 16\n    required-windows: 3\n    minimum-interval-ms: 35\n    maximum-interval-ms: 160\n    maximum-cv: 0.025",
+              "MaceSwapA": "MaceSwapA:\n    maximum-cycle-ms: 700\n    maximum-attack-delay-ms: 350\n    cycle-window-ms: 5000\n    required-cycles: 3",
+              "MorePacketsA": "MorePacketsA:\n    window-ms: 1000\n    maximum-packets: 34\n    required-windows: 3",
+              "AuraA": "AuraA:\n    window: 7\n    required-evidence: 3\n    maximum-distance: 5.5",
+              "AuraB": "AuraB:\n    minimum-interval-ms: 75\n    maximum-interval-ms: 500\n    sample-count: 20\n    maximum-cv: 0.012\n    minimum-target-switches: 5\n    required-windows: 3",
+          }
+          for lang in ("en", "ru"):
+              config_path = root / "common/src/main/resources/config" / f"{lang}.yml"
+              config_text = config_path.read_text(encoding="utf-8")
+              config_text = re.sub(r"(?m)^Simulation:", "Prediction:", config_text, count=1)
+
+              # Lower the actual NoSlow threshold, not unrelated thresholds elsewhere in the config.
+              match = re.search(r"(?ms)^NoSlow:\n(.*?)(?=^[A-Za-z][A-Za-z0-9_-]*:\n|\Z)", config_text)
+              if not match:
+                  raise SystemExit(f"NoSlow config section missing in {config_path}")
+              no_slow_section = match.group(1)
+              no_slow_section, count = re.subn(r"(?m)^    threshold: 0\.001$", "    threshold: 0.0001", no_slow_section, count=1)
+              if count != 1:
+                  raise SystemExit(f"NoSlow threshold not found in {config_path}")
+              config_text = config_text[:match.start(1)] + no_slow_section + config_text[match.end(1):]
+
+              # Replace existing sections by top-level YAML section boundaries; append them when absent.
+              config_lines = config_text.splitlines()
+              for key in ("KillAuraA", "KillAuraB", "KillAuraC", "KillAuraD", "AimA", "AimC", "AimD", "AimE", "AimF", "ScaffoldA", "ScaffoldD", "AirStuckB", "AutoClickerA", "MaceSwapA", "MorePacketsA", "AuraA", "AuraB"):
+                  starts = [i for i, line in enumerate(config_lines) if line == key + ":"]
+                  if len(starts) > 1:
+                      raise SystemExit(f"Found duplicate {key} config sections in {config_path}")
+                  block_lines = new_check_defaults[key].splitlines()
+                  if starts:
+                      start = starts[0]
+                      end = start + 1
+                      while end < len(config_lines):
+                          line = config_lines[end]
+                          if line and not line[0].isspace() and line.endswith(":"):
+                              break
+                          end += 1
+                      config_lines[start:end] = block_lines + [""]
+                  else:
+                      if config_lines and config_lines[-1].strip():
+                          config_lines.append("")
+                      config_lines.extend(block_lines)
+                      config_lines.append("")
+              config_text = "\n".join(config_lines).rstrip() + "\n"
+
+              for key, block in new_check_defaults.items():
+                  if re.search(rf"(?m)^{re.escape(key)}:", config_text):
+                      continue
+                  config_text = config_text.rstrip() + "\n\n" + block + "\n"
+              config_path.write_text(config_text, encoding="utf-8")
+
+          # Keep only English and Russian resource locales, with English as fallback for all others.
+          for folder_name in ("config", "messages", "punishments", "database", "discord"):
+              folder = root / "common/src/main/resources" / folder_name
+              if folder.exists():
+                  for locale_file in folder.glob("*.yml"):
+                      if locale_file.stem not in ("en", "ru"):
+                          locale_file.unlink()
+
+          print("Applied renamed checks, AirStuck watchdog, requested checks, AimB false-positive hardening, config defaults, unbolded alerts, and ru/en-only locales.")
+          PY
+
+      - name: Build only the Bukkit/Paper plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$PROJECT_DIR"
+          chmod +x ./gradlew
+          ./gradlew --no-daemon clean :bukkit:shadowJar -Prelease=true -PshadePE=true -Prelocate=true
+
+      - name: Verify and package the ready-to-install plugin and source
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PLUGIN_DIR="$PROJECT_DIR/bukkit/build/libs"
+          mapfile -t PLUGIN_JARS < <(find "$PLUGIN_DIR" -maxdepth 1 -type f -name 'cwanticheat-bukkit-*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' | sort)
+
+          if [[ "${#PLUGIN_JARS[@]}" -ne 1 ]]; then
+            echo "::error::Expected exactly one cwanticheat-bukkit plugin JAR, found ${#PLUGIN_JARS[@]}."
+            printf '%s\n' "${PLUGIN_JARS[@]}"
+            exit 1
+          fi
+
+          PLUGIN_JAR="${PLUGIN_JARS[0]}"
+          unzip -tq "$PLUGIN_JAR"
+          unzip -p "$PLUGIN_JAR" plugin.yml > "$RUNNER_TEMP/plugin.yml"
+
+          grep -Eq '^name: CWanticheat$' "$RUNNER_TEMP/plugin.yml"
+          grep -Eq '^main: ac\.grim\.grimac\.platform\.bukkit\.GrimACBukkitLoaderPlugin$' "$RUNNER_TEMP/plugin.yml"
+
+          jar tf "$PLUGIN_JAR" > "$RUNNER_TEMP/plugin-entries.txt"
+          if ! grep -q '^ac/grim/grimac/shaded/packetevents/' "$RUNNER_TEMP/plugin-entries.txt"; then
+            echo "::error::PacketEvents classes are missing; refusing to publish a non-standalone plugin."
+            exit 1
+          fi
+
+          for class in \
+            ac/grim/grimac/checks/impl/movement/AirStuckA.class \
+            ac/grim/grimac/checks/impl/movement/AirStuckB.class \
+            ac/grim/grimac/checks/impl/movement/HighJumpA.class \
+            ac/grim/grimac/checks/impl/inventory/AutoSwapA.class \
+            ac/grim/grimac/checks/impl/inventory/GhostHandA.class \
+            ac/grim/grimac/checks/impl/scaffolding/ScaffoldA.class \
+            ac/grim/grimac/checks/impl/baritone/BaritoneA.class \
+            ac/grim/grimac/checks/impl/movement/VoidClip.class \
+            ac/grim/grimac/checks/impl/movement/StrafeA.class \
+            ac/grim/grimac/checks/impl/movement/StrafeB.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$BlockReach.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$ScaffoldB.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$ScaffoldC.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$AutoCrystalA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$ChestStealerA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$BaritoneB.class \
+            ac/grim/grimac/checks/impl/ronex/RonexExtraChecks\$BadDig.class \
+            ac/grim/grimac/checks/impl/ronex/RonexAdvancedChecks\$AutoFishA.class \
+            ac/grim/grimac/checks/impl/combat/CriticalsA.class \
+            ac/grim/grimac/checks/impl/combat/TriggerBotA.class \
+            ac/grim/grimac/checks/impl/combat/InvHitA.class \
+            ac/grim/grimac/checks/impl/aim/ElytraAimA.class \
+            ac/grim/grimac/checks/impl/aim/ElytraAimB.class \
+            ac/grim/grimac/checks/impl/aim/AimA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AutoClickerA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$MaceSwapA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$MorePacketsA.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$ScaffoldD.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AimC.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AimD.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AimE.class \
+            ac/grim/grimac/checks/impl/ronex/RonexNewChecks\$AuraA.class \
+            ac/grim/grimac/checks/impl/aim/AimF.class \
+            ac/grim/grimac/checks/impl/combat/AuraB.class \
+            ac/grim/grimac/checks/impl/combat/KillAuraD.class \
+            ac/grim/grimac/manager/tick/impl/AirStuckWatchdog.class; do
+            if ! grep -q "^$class$" "$RUNNER_TEMP/plugin-entries.txt"; then
+              echo "::error::Missing new check class in the plugin: $class"
+              exit 1
+            fi
+          done
+
+          mkdir -p "$GITHUB_WORKSPACE/dist"
+          cp "$PLUGIN_JAR" "$GITHUB_WORKSPACE/dist/CWanticheat.jar"
+          echo "Verified ready-to-install Bukkit/Paper plugin: dist/CWanticheat.jar"
+
+          cd "$PROJECT_DIR"
+          zip -qr "$GITHUB_WORKSPACE/dist/CWanticheat-source.zip" . \
+            -x '*/build/*' '*/.gradle/*' '.gradle/*' '.git/*' '*/.git/*' '*/.idea/*'
+
+      - name: Upload ready-to-install plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: CWanticheat-JAR
+          path: dist/CWanticheat.jar
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload source
+        uses: actions/upload-artifact@v4
+        with:
+          name: CWanticheat-source
+          path: dist/CWanticheat-source.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Attach plugin and source to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/CWanticheat.jar
+            dist/CWanticheat-source.zip
