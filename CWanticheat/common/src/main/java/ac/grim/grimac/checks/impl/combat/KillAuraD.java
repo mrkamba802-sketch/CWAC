@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-@CheckData(name = "KillAuraD", stableKey = "cwanticheat.combat.kill_aura_d",
+@CheckData(name = "KillAuraD", stableKey = "cwanticheat.combat.kill_aura_d", experimental = false
         description = "Repeatedly switches between separated living targets without enough intervening rotation")
 public class KillAuraD extends Check implements PacketReceiveListener, RotationListener {
     private final Deque<Boolean> switchSamples = new ArrayDeque<>();

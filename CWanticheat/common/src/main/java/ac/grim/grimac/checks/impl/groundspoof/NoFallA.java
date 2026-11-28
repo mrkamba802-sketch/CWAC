@@ -7,7 +7,7 @@ import ac.grim.grimac.checks.type.PostPredictionListener;
 import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.anticheat.update.PredictionComplete;
 
-@CheckData(name = "NoFallA", stableKey = "grim.groundspoof.no_fall_a", description = "Claimed ground contact while still falling", setback = 8, decay = 0.02)
+@CheckData(name = "NoFallA", stableKey = "grim.groundspoof.no_fall_a", experimental = false description = "Claimed ground contact while still falling", setback = 8, decay = 0.02)
 public class NoFallA extends Check implements PostPredictionListener {
     private static final Verbose V = Verbose.of("fallDistance={f64}, motionY={f64}, ground={bool}");
     private int suspiciousTicks;

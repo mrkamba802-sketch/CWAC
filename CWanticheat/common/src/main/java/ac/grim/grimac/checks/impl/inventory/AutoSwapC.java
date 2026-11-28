@@ -12,7 +12,7 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientClickWindow;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerFlying;
 
-@CheckData(name = "AutoSwapC", stableKey = "grim.inventory.auto_swap_c", configName = "AutoSwap", description = "Checks for isolated inventory swap without tick", decay = 0.05)
+@CheckData(name = "AutoSwapC", stableKey = "grim.inventory.auto_swap_c", experimental = false configName = "AutoSwap", description = "Checks for isolated inventory swap without tick", decay = 0.05)
 public class AutoSwapC extends Check implements PacketReceiveListener, PacketSendListener {
 
     private int clickCountThisSession = 0;

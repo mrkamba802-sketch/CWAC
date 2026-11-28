@@ -11,7 +11,7 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-@CheckData(name = "TriggerBotA", stableKey = "cwanticheat.combat.triggerbot_a",
+@CheckData(name = "TriggerBotA", stableKey = "cwanticheat.combat.triggerbot_a", experimental = false
         description = "Repeated attacks immediately after a precise target-directed rotation")
 public class TriggerBotA extends AimHitCheck implements PacketReceiveListener {
     private final Deque<Long> fastAimAttacks = new ArrayDeque<>();

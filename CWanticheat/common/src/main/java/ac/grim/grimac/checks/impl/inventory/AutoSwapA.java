@@ -12,7 +12,7 @@ import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientHe
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity;
 import org.jetbrains.annotations.NotNull;
 
-@CheckData(name = "AutoSwapA", stableKey = "grim.inventory.auto_swap_a", description = "Repeated rapid hotbar swap, attack, and return cycles", setback = 0, decay = 0.02)
+@CheckData(name = "AutoSwapA", stableKey = "grim.inventory.auto_swap_a", experimental = false description = "Repeated rapid hotbar swap, attack, and return cycles", setback = 0, decay = 0.02)
 public class AutoSwapA extends Check implements PacketReceiveListener {
     private static final Verbose V = Verbose.of("fromSlot={uint}, attackDelayMs={ulong}, cycleMs={ulong}, cycles={uint}");
     private int originalSlot = -1;

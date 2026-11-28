@@ -16,7 +16,7 @@ import com.github.retrooper.packetevents.protocol.world.states.type.StateTypes;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerBlockPlacement;
 import org.jetbrains.annotations.NotNull;
 
-@CheckData(name = "GhostHandA", stableKey = "grim.inventory.ghost_hand_a", description = "Tried to interact with a container through an obstructing block", setback = 0, decay = 0.02)
+@CheckData(name = "GhostHandA", stableKey = "grim.inventory.ghost_hand_a", experimental = false description = "Tried to interact with a container through an obstructing block", setback = 0, decay = 0.02)
 public class GhostHandA extends InventoryCheck {
     private static final Verbose V = Verbose.of("clicked={mcpos}, visible={bool}, evidence={uint}");
     private int evidence;
