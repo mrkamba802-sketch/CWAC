@@ -205,7 +205,8 @@ jobs:
                           {"AutoClickerA", "AutoClickerA"},
                           {"MaceSwapA", "MaceSwapA"},
                           {"MorePacketsA", "MorePacketsA"},
-                          {"AuraA", "AuraA"},\n                          {"AuraB", "AuraB"}
+                          {"AuraA", "AuraA"},
+                          {"AuraB", "AuraB"}
                   };
 
                   String result = configString;
