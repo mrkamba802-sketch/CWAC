@@ -3,7 +3,7 @@ import ac.grim.grimac.api.config.ConfigManager;import ac.grim.grimac.checks.Chec
 import ac.grim.grimac.checks.type.PostPredictionListener;import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.anticheat.update.PredictionComplete;import com.github.retrooper.packetevents.protocol.item.ItemStack;
 import java.util.ArrayDeque;import java.util.Deque;
-@CheckData(name="NoSlowC",stableKey="ronexgrim.movement.noslow_strict",description="Detects sustained partial or complete item-use slowdown bypasses",setback=5)
+@CheckData(name="NoSlowC",stableKey = "ronexgrim.movement.noslow_strict", experimental = falsedescription="Detects sustained partial or complete item-use slowdown bypasses",setback=5)
 public class NoSlowC extends Check implements PostPredictionListener{
  private Deque<Boolean> samples;private double threshold,bestOffset=Double.POSITIVE_INFINITY;private int sampleWindow,requiredSamples;
  private boolean hasPrediction;private long lastEvidenceNanos;private String lastItemKey="";

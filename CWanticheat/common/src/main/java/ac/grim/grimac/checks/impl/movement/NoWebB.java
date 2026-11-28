@@ -10,7 +10,7 @@ import ac.grim.grimac.utils.anticheat.update.PredictionComplete;
 import ac.grim.grimac.utils.nmsutil.StuckSpeed;
 import org.jetbrains.annotations.NotNull;
 
-@CheckData(name = "NoWebB", stableKey = "grim.movement.no_web_b", description = "Repeated horizontal acceleration while compensated web slowdown is active", setback = 6, decay = 0.02)
+@CheckData(name = "NoWebB", stableKey = "grim.movement.no_web_b", experimental = false description = "Repeated horizontal acceleration while compensated web slowdown is active", setback = 6, decay = 0.02)
 public class NoWebB extends Check implements PostPredictionListener {
     private static final Verbose V = Verbose.of("horizontalOffset={f64}, threshold={f64}, streak={uint}");
     private double bestHorizontalOffset = Double.POSITIVE_INFINITY;

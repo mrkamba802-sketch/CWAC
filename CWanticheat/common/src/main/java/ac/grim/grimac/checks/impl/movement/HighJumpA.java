@@ -9,7 +9,7 @@ import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.anticheat.update.PredictionComplete;
 import org.jetbrains.annotations.NotNull;
 
-@CheckData(name = "HighJumpA", stableKey = "grim.movement.high_jump_a", description = "Exceeded vanilla upward velocity after block-assisted jumps", setback = 8, decay = 0.02)
+@CheckData(name = "HighJumpA", stableKey = "grim.movement.high_jump_a", experimental = false description = "Exceeded vanilla upward velocity after block-assisted jumps", setback = 8, decay = 0.02)
 public class HighJumpA extends Check implements PostPredictionListener {
     private static final Verbose V = Verbose.of("expectedY={f64}, actualY={f64}, excess={f64}, streak={uint}");
     private double excessThreshold = 0.12;

@@ -10,7 +10,7 @@ import ac.grim.grimac.utils.anticheat.update.PredictionComplete;
 import com.github.retrooper.packetevents.protocol.player.ClientVersion;
 import org.jetbrains.annotations.NotNull;
 
-@CheckData(name = "NoSlowA", stableKey = "grim.movement.no_slow_a", description = "Detects tiny item-use movement excess across consecutive prediction samples", setback = 2, decay = 0.01)
+@CheckData(name = "NoSlowA", stableKey = "grim.movement.no_slow_a", experimental = false description = "Detects tiny item-use movement excess across consecutive prediction samples", setback = 2, decay = 0.01)
 public class NoSlowA extends Check implements PostPredictionListener {
     private static final Verbose V = Verbose.of("bestOffset={f64}, threshold={f64}, streak={uint}");
     private double bestOffset = Double.POSITIVE_INFINITY;

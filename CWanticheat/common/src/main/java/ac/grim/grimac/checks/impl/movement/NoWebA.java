@@ -10,7 +10,7 @@ import ac.grim.grimac.utils.anticheat.update.PredictionComplete;
 import ac.grim.grimac.utils.nmsutil.StuckSpeed;
 import org.jetbrains.annotations.NotNull;
 
-@CheckData(name = "NoWebA", stableKey = "grim.movement.no_web_a", description = "Moved faster than compensated cobweb prediction", setback = 6, decay = 0.02)
+@CheckData(name = "NoWebA", stableKey = "grim.movement.no_web_a", experimental = false description = "Moved faster than compensated cobweb prediction", setback = 6, decay = 0.02)
 public class NoWebA extends Check implements PostPredictionListener {
     private static final Verbose V = Verbose.of("bestOffset={f64}, threshold={f64}, streak={uint}");
     private double bestOffset = Double.POSITIVE_INFINITY;
