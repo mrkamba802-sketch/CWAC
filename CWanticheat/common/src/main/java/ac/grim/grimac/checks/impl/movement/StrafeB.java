@@ -9,7 +9,7 @@ import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.anticheat.update.PredictionComplete;
 import org.jetbrains.annotations.NotNull;
 
-@CheckData(name = "StrafeB", stableKey = "grim.movement.strafe_b", description = "Detects repeated sideways acceleration outside the vanilla prediction envelope", setback = 2, decay = 0.02)
+@CheckData(name = "StrafeB", stableKey = "grim.movement.strafe_b", experimental = false description = "Detects repeated sideways acceleration outside the vanilla prediction envelope", setback = 2, decay = 0.02)
 public class StrafeB extends Check implements PostPredictionListener {
     private static final Verbose V = Verbose.of("lateralError={f64}, horizontalError={f64}, offset={f64}, evidence={uint}");
     private double lateralErrorThreshold = 0.02;

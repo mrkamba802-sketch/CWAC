@@ -72,7 +72,7 @@ public final class RonexExtraChecks {
         return Math.sqrt(variance / values.size()) / mean;
     }
 
-    @CheckData(name = "BlockReach", stableKey = "ronexgrim.world.block_reach",
+    @CheckData(name = "BlockReach", stableKey = "ronexgrim.world.block_reach", experimental = false
             description = "Detected block interaction beyond the conservative reach limit")
     public static class BlockReach extends Check implements PacketReceiveListener {
         private double maximumDistance;
@@ -110,7 +110,7 @@ public final class RonexExtraChecks {
         }
     }
 
-    @CheckData(name = "ScaffoldB", stableKey = "ronexgrim.world.scaffold_air_bridge",
+    @CheckData(name = "ScaffoldB", stableKey = "ronexgrim.world.scaffold_air_bridge", experimental = false
             description = "Repeated block placements beneath the player during descending movement")
     public static class ScaffoldB extends Check implements PacketReceiveListener, PostPredictionListener {
         private final Deque<Long> intervals = new ArrayDeque<>();
@@ -165,7 +165,7 @@ public final class RonexExtraChecks {
         }
     }
 
-    @CheckData(name = "ScaffoldC", stableKey = "ronexgrim.world.scaffold_look_mismatch",
+    @CheckData(name = "ScaffoldC", stableKey = "ronexgrim.world.scaffold_look_mismatch", experimental = false
             description = "Repeated block placements while the view ray missed the clicked block")
     public static class ScaffoldC extends Check implements PacketReceiveListener {
         private final Deque<Boolean> placementMisses = new ArrayDeque<>();
@@ -209,7 +209,7 @@ public final class RonexExtraChecks {
         }
     }
 
-    @CheckData(name = "AutoCrystalA", stableKey = "ronexgrim.combat.autocrystal_cycle",
+    @CheckData(name = "AutoCrystalA", stableKey = "ronexgrim.combat.autocrystal_cycle", experimental = false
             description = "Detected repeated rapid end-crystal placement and break cycles")
     public static class AutoCrystalA extends Check implements PacketReceiveListener {
         private final Deque<Long> cycles = new ArrayDeque<>();
@@ -251,7 +251,7 @@ public final class RonexExtraChecks {
         }
     }
 
-    @CheckData(name = "ChestStealerA", stableKey = "ronexgrim.inventory.container_click_burst",
+    @CheckData(name = "ChestStealerA", stableKey = "ronexgrim.inventory.container_click_burst", experimental = false
             description = "Moved items out of a container through an implausibly fast burst of inventory clicks")
     public static class ChestStealerA extends Check implements PacketReceiveListener {
         private final Deque<Long> clicks = new ArrayDeque<>();
@@ -290,7 +290,7 @@ public final class RonexExtraChecks {
         }
     }
 
-    @CheckData(name = "BaritoneB", stableKey = "ronexgrim.movement.baritone_turn_regularity",
+    @CheckData(name = "BaritoneB", stableKey = "ronexgrim.movement.baritone_turn_regularity", experimental = false
             description = "Repeated highly uniform movement-linked rotation corrections")
     public static class BaritoneB extends Check
             implements RotationListener, PostPredictionListener, PacketReceiveListener {
@@ -365,7 +365,7 @@ public final class RonexExtraChecks {
         }
     }
 
-    @CheckData(name = "BadDig", stableKey = "ronexgrim.world.bad_dig",
+    @CheckData(name = "BadDig", stableKey = "ronexgrim.world.bad_dig", experimental = false
             description = "Detects repeated block-dig completion packets arriving implausibly soon after starts")
     public static class BadDig extends Check implements PacketReceiveListener {
         private final Deque<Boolean> samples = new ArrayDeque<>();

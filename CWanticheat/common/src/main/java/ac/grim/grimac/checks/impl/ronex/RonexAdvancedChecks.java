@@ -35,7 +35,7 @@ public final class RonexAdvancedChecks {
         return Math.sqrt(variance / values.size()) / mean;
     }
 
-    @CheckData(name = "AutoFishA", stableKey = "ronexgrim.misc.autofish_rapid",
+    @CheckData(name = "AutoFishA", stableKey = "ronexgrim.misc.autofish_rapid", experimental = false
             description = "Repeated unusually rapid fishing-rod use cycles")
     public static class AutoFishA extends Check implements PacketReceiveListener {
         private final Deque<Long> intervals = new ArrayDeque<>();

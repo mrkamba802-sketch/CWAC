@@ -9,7 +9,7 @@ import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.anticheat.update.PredictionComplete;
 import org.jetbrains.annotations.NotNull;
 
-@CheckData(name = "VoidClip", stableKey = "grim.movement.void_clip", description = "Detects unexplained downward movement through predicted solid collisions", setback = 1, decay = 0.01)
+@CheckData(name = "VoidClip", stableKey = "grim.movement.void_clip", experimental = false description = "Detects unexplained downward movement through predicted solid collisions", setback = 1, decay = 0.01)
 public class VoidClip extends Check implements PostPredictionListener {
     private static final Verbose V = Verbose.of("expectedY={f64}, actualY={f64}, verticalError={f64}, offset={f64}, streak={uint}");
     private double verticalErrorThreshold = 0.35;

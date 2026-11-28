@@ -13,7 +13,7 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.world.states.type.StateTypes;
 import org.jetbrains.annotations.NotNull;
 
-@CheckData(name = "ScaffoldA", stableKey = "grim.scaffolding.scaffold_a", description = "Repeatedly placed blocks at foot level while moving with a forward-facing view", setback = 6, decay = 0.02)
+@CheckData(name = "ScaffoldA", stableKey = "grim.scaffolding.scaffold_a", experimental = false description = "Repeatedly placed blocks at foot level while moving with a forward-facing view", setback = 6, decay = 0.02)
 public class ScaffoldA extends BlockPlaceCheck implements BlockPlaceListener, PacketReceiveListener {
     private static final Verbose V = Verbose.of("horizontalSpeed={f64}, pitch={f32}, placeY={uint}, evidence={uint}");
     private static final long EVIDENCE_WINDOW_NANOS = 400_000_000L;

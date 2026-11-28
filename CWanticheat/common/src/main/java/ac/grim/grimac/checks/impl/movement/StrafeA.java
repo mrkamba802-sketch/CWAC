@@ -9,7 +9,7 @@ import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.anticheat.update.PredictionComplete;
 import org.jetbrains.annotations.NotNull;
 
-@CheckData(name = "StrafeA", stableKey = "grim.movement.strafe_a", description = "Detects repeated horizontal speed excess against vanilla movement prediction", setback = 2, decay = 0.02)
+@CheckData(name = "StrafeA", stableKey = "grim.movement.strafe_a", experimental = false description = "Detects repeated horizontal speed excess against vanilla movement prediction", setback = 2, decay = 0.02)
 public class StrafeA extends Check implements PostPredictionListener {
     private static final Verbose V = Verbose.of("actualSpeed={f64}, predictedSpeed={f64}, excess={f64}, offset={f64}, evidence={uint}");
     private double horizontalExcessThreshold = 0.025;
