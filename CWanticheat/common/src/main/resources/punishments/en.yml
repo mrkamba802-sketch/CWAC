@@ -156,6 +156,7 @@ Punishments:
     checks:
       - "AirStuck"
       - "AirStuckA"
+      - "AirStuckB"
     commands:
       - "10:5 [alert]"
       - "1:1 [log]"
@@ -198,6 +199,7 @@ Punishments:
       - "KillAuraA"
       - "KillAuraB"
       - "KillAuraC"
+      - "KillAuraD"
     commands:
       - "10:5 [alert]"
       - "1:1 [log]"
@@ -458,6 +460,7 @@ Punishments:
       - "AimC"
       - "AimD"
       - "AimE"
+      - "AimF"
       - "AimDuplicateLook"
       - "AimModulo360"
     commands:
@@ -494,6 +497,15 @@ Punishments:
     remove-violations-after: 300
     checks:
       - "AuraA"
+    commands:
+      - "10:5 [alert]"
+      - "1:1 [log]"
+      - "20:10 [webhook]"
+      - "20:10 [proxy]"
+  AuraB:
+    remove-violations-after: 300
+    checks:
+      - "AuraB"
     commands:
       - "10:5 [alert]"
       - "1:1 [log]"
